@@ -10,7 +10,6 @@ Counter = 0
 
 
 function InitializeAgent()
-
 end
 
 

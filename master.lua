@@ -14,6 +14,13 @@ function InitializeAgent()
 	for i = 1, Variables.N do
 		table.insert(Bases, Agent.addAgent("base.lua"))
 	end
+
+	for k,v in pairs(Bases) do
+		for i=1,Variables.X do
+			Agent.addAgent("Explorer.lua", 0, 0, v)
+		end
+	end
+
 end
 
 function CleanUp()

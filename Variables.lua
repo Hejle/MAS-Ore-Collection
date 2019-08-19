@@ -12,7 +12,7 @@ variables.Q = 100 -- Cost of a movement action
 variables.S = 100 -- Memorysize of each robot
 variables.T = 100 -- Maximum number of cycles
 variables.W = 100 -- Maximum number of ore a robot can grab
-variables.X = 100 -- Number of explorers per base
+variables.X = 1 -- Number of explorers per base
 variables.Y = 100 -- Number of transporters per base
 
 return variables

@@ -10,7 +10,12 @@ Counter = 0
 
 
 function InitializeAgent()
-
+    --[==[
+    say("New Explorer")
+    for i,v in ipairs(Agent.getMemberOfGroups(ID)) do
+        say("Member of: " .. v)
+    end
+    --]==]
 end
 
 
