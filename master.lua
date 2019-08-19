@@ -4,6 +4,7 @@ Map = require "ranalib_map"
 Agent = require "ranalib_agent"
 Variables = require "Variables"
 Constants = require "Constants"
+ShardePosition = require "SharedPosition"
 
 Bases = {}
 
@@ -12,16 +13,20 @@ function InitializeAgent()
 	MapInitialization()
 
 	for i = 1, Variables.N do
-		table.insert(Bases, Agent.addAgent("base.lua"))
+		table.insert(Bases, Agent.addAgent("Base.lua"))
 	end
 
 	for k,v in pairs(Bases) do
 		for i=1,Variables.X do
-			Agent.addAgent("Explorer.lua", 0, 0, v)
+			local info = ShardePosition.GetInformation(v)
+			Agent.addAgent("Explorer.lua", info[1], info[2], v)
 		end
 	end
 
+	Agent.removeAgent(ID)
+
 end
+
 
 function CleanUp()
 end
