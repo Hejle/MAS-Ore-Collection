@@ -1,21 +1,26 @@
+local sharedPosition = {}
 Shared = require "ranalib_shared"
 Constants = require "Constants"
 
-
-function GetInformation(ID)
+function sharedPosition.GetInformation(ID)
     local result = {}
     result = Shared.getTable(Constants.positionTable)
 
     return result[ID]
 end
 
-function StoreInformation(ID, Information)
+function sharedPosition.StoreInformation(ID, Information)
     local result = {}
     result = Shared.getTable(Constants.positionTable)
+    if result == nil then
+        result = {}
+    end
     table.insert(result, ID, Information)
     Shared.storeTable(Constants.positionTable, result)
 end
 
-function GetTable()
+function sharedPosition.GetTable()
     return Shared.getTable(Constants.positionTable)
 end
+
+return sharedPosition
