@@ -2,18 +2,17 @@ Stat = require "ranalib_statistic"
 Draw = require "ranalib_draw"
 Map = require "ranalib_map"
 Agent = require "ranalib_agent"
+Variables = require "Variables"
+Constants = require "Constants"
 
 background_color = {0, 0, 0}
 ore_color = {0, 255, 255}
-
-D = 0.01
-N = 10
 
 function InitializeAgent()
 
 	MapInitialization()
 
-	for i = 1, N do
+	for i = 1, Variables.N do
 		 Agent.addAgent("base.lua")
 		 
 	end
@@ -27,7 +26,7 @@ function MapInitialization()
 
 	MapCleanUp()
 
-	Ore_total = ENV_WIDTH * ENV_HEIGHT * D
+	Ore_total = ENV_WIDTH * ENV_HEIGHT * Variables.D
 
 	g = 0
 
