@@ -5,18 +5,15 @@ Agent = require "ranalib_agent"
 Variables = require "Variables"
 Constants = require "Constants"
 
-background_color = {0, 0, 0}
-ore_color = {0, 255, 255}
+Bases = {}
 
 function InitializeAgent()
 
 	MapInitialization()
 
 	for i = 1, Variables.N do
-		 Agent.addAgent("base.lua")
-		 
+		table.insert(Bases, Agent.addAgent("base.lua"))
 	end
-
 end
 
 function CleanUp()
@@ -34,10 +31,10 @@ function MapInitialization()
 		local x = Stat.randomInteger(0, ENV_WIDTH)
 		local y = Stat.randomInteger(0, ENV_HEIGHT)
 
-		if Draw.compareColor(Map.checkColor(x, y), background_color) then
+		if Draw.compareColor(Map.checkColor(x, y), Constants.background_color) then
 			--say("succes")
 
-			Map.modifyColor(x, y, ore_color)
+			Map.modifyColor(x, y, Constants.ore_color)
 		else
 			j = j - 1
 		end
@@ -53,7 +50,7 @@ function MapCleanUp()
 	-- Clean map:
 	for i = 0, ENV_WIDTH do
 		for j = 0, ENV_HEIGHT do
-			Map.modifyColor(i, j, {0, 0, 0})
+			Map.modifyColor(i, j, Constants.background_color)
 		end
 	end
 end
