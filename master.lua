@@ -4,8 +4,10 @@ Map = require "ranalib_map"
 Agent = require "ranalib_agent"
 Variables = require "Variables"
 Constants = require "Constants"
+SharedPosition = require "SharedPosition"
 
 Bases = {}
+
 
 function InitializeAgent()
 

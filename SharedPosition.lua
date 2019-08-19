@@ -9,6 +9,15 @@ function sharedPosition.GetInformation(ID)
     return result[ID]
 end
 
+function HelloWorldFunction()
+    say("World")
+end
+
+function sharedPosition.PublicFunction()
+    say("Hello")
+    return HelloWorldFunction
+end
+
 function sharedPosition.StoreInformation(ID, Information)
     local result = {}
     result = Shared.getTable(Constants.positionTable)
@@ -38,6 +47,11 @@ function sharedPosition.GetInformationFromList(IDs)
     return returnTable
 end
 
-
+function sharedPosition.GetInformationSorted(sortingFunction)
+    local result = {}
+    local returnTable = {}
+    result = Shared.getTable(Constants.positionTable)
+    return sortingFunction(result)
+end
 
 return sharedPosition
