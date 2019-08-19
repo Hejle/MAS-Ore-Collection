@@ -23,4 +23,21 @@ function sharedPosition.GetTable()
     return Shared.getTable(Constants.positionTable)
 end
 
+function sharedPosition.GetInformationFromList(IDs)
+    local result = {}
+    local returnTable = {}
+    result = Shared.getTable(Constants.positionTable)
+
+    for k,v in pairs(result) do
+        for i=1,#IDs do
+            if IDs[i] == k then
+                table.insert(returnTable, k, v)
+            end
+        end
+    end
+    return returnTable
+end
+
+
+
 return sharedPosition
