@@ -5,6 +5,7 @@ Agent = require "ranalib_agent"
 Variables = require "Libs/Variables"
 Constants = require "Libs/Constants"
 SharedPosition = require "Libs/SharedPosition"
+Inspect = require "Libs/inspect"
 Bases = {}
 
 
@@ -15,7 +16,6 @@ function InitializeAgent()
 	for i = 1, Variables.N do
 		table.insert(Bases, Agent.addAgent("Base.lua"))
 	end
-
 	for k,v in pairs(Bases) do
 		for i=1,Variables.X do
 			local info = SharedPosition.GetInformation(v)
