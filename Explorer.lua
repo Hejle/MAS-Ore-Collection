@@ -2,25 +2,18 @@ Move = require "ranalib_movement"
 Collision = require "ranalib_collision"
 Agent = require "ranalib_agent"
 Event =  require "ranalib_event"
-Variables = require "Variables"
-Constants = require "Constants"
-ShardePosition = require "SharedPosition"
+Variables = require "Libs/Variables"
+Constants = require "Libs/Constants"
+SharedPosition = require "Libs/SharedPosition"
 Map = require "ranalib_map" 
-Utilities = require "Utilities"
+Utilities = require "Libs/Utilities"
 
 --parameters
 Counter = 0
 
 
 function InitializeAgent()
-
-    ShardePosition.StoreInformation(ID, {PositionX,PositionY})
-    --[==[
-    say("New Explorer")
-    for i,v in ipairs(Agent.getMemberOfGroups(ID)) do
-        say("Member of: " .. v)
-    end
-    --]==]
+    SharedPosition.StoreInformation(ID, {PositionX,PositionY})
 end
 
 
@@ -28,7 +21,7 @@ function TakeStep()
 
     -- Update Agent Information
     Search()
-    ShardePosition.StoreInformation(ID, {PositionX,PositionY})
+    SharedPosition.StoreInformation(ID, {PositionX,PositionY})
 end
 
 function Search()

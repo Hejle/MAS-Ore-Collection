@@ -2,9 +2,9 @@ Stat = require "ranalib_statistic"
 Draw = require "ranalib_draw"
 Map = require "ranalib_map"
 Agent = require "ranalib_agent"
-Variables = require "Variables"
-Constants = require "Constants"
-SharedPosition = require "SharedPosition"
+Variables = require "Libs/Variables"
+Constants = require "Libs/Constants"
+SharedPosition = require "Libs/SharedPosition"
 Bases = {}
 
 
@@ -22,7 +22,7 @@ function InitializeAgent()
 			Agent.addAgent("Explorer.lua", info[1], info[2], v)
 		end
 		for i=1,Variables.Y do
-			local info = ShardePosition.GetInformation(v)
+			local info = SharedPosition.GetInformation(v)
 			Agent.addAgent("Transporter.lua", info[1], info[2], v)
 		end
 	end
