@@ -13,11 +13,9 @@ DeployPositionsList = {}
 
 
 function InitializeAgent()
-
     SharedPosition.StoreInformation(ID, {PositionX,PositionY})
+    Agent.changeColor{id=ID, r=128,g=0,b=128}
     GenerateDeployPositions()
-    
-
 end
 
 
