@@ -13,7 +13,11 @@ Inspect = require "Libs.inspect"
 --parameters
 Counter = 0
 Group_ID = 0
-TargetPosition = {}
+TargetPosition = {PositionX, PositionY}
+BasePosition = {}
+TotalMemory = Variables.S
+UsedMemory = 0
+Memory = {}
 MyState = State.Base
 
 
@@ -28,6 +32,7 @@ function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
     if eventDescription == "init" and ID ~= sourceID then
        if(eventTable ~= nil) then
         Group_ID = eventTable["group"]
+        BasePosition = eventTable["BasePosition"]
         l_print("Explorer: " .. ID .. " has Group_ID: " .. Group_ID )
        else
         l_print("ERROR: eventable empty." )
@@ -48,6 +53,10 @@ function TakeStep()
         Event.emit {speed = 343, description = "deployPositionRequested",targetID = Group_ID}	
     end
 
+    if UsedMemory == TotalMemory then
+        TargetPosition = BasePosition
+    end
+
     Counter = Counter + 1
     
     --Search()
@@ -56,7 +65,9 @@ function TakeStep()
     if PositionX ~= TargetPosition[1] or PositionY ~= TargetPosition[2] then
         Utilities.moveTorus(TargetPosition[1],TargetPosition[2])
     else
-        MyState = State.Deployed
+        if MyState == State.Deploying then
+            MyState = State.Deployed
+        end
     end
 end
 
@@ -66,6 +77,7 @@ function Search()
     if table ~= nil then
         for i=1, #table do
             Map.quantumModify(table[i].posX, table[i].posY,Constants.ore_color, Constants.ore_color_found)
+            AddInfoToMemory({table[i].posX, table[i].posY})
         end
         
 	end

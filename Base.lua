@@ -39,7 +39,7 @@ function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
 end
 
 function InitRobots()
-    Event.emit {speed = 343, description = "init", table = {group=ID}, groupID = ID}
+    Event.emit {speed = 343, description = "init", table = {group=ID, BasePosition={PositionX, PositionY}}, groupID = ID}
 end
 
 function CleanUp()
