@@ -8,6 +8,7 @@ ShardePosition = require "SharedPosition"
 
 --parameters
 Counter = 0
+DeployPositionsList = {}
 
 
 function InitializeAgent()
@@ -18,13 +19,23 @@ end
 
 
 function TakeStep()
-    
+
 end
 
 function HandleEvent(event)
+
 
 end
 
 function CleanUp()
 
+end
+
+function  GenerateDeployPositions()
+    
+    for i=1, Variables.X do
+        PosX = PositionX + 10
+        PosExplorer = {PosX,PositionY}
+        table.insert( DeployPositionsList,i,PosExplorer)
+    end
 end

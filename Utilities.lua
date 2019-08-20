@@ -8,6 +8,7 @@ Variables = require "Variables"
 Constants = require "Constants"
 ShardePosition = require "SharedPosition"
 Map = require "ranalib_map"  
+Stat = require "ranalib_statistic"
 
 function Utilities.moveTorus(x,y)
 
@@ -128,6 +129,10 @@ DestinationY = destY
 
 end
 
+function randomWithStep(first, last, stepSize)
+    local maxSteps = math.floor((last-first)/stepSize)
+    return first + stepSize * Stat.randomInteger(0, maxSteps)
+end
 
 
 return Utilities

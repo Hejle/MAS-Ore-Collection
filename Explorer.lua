@@ -15,6 +15,8 @@ Counter = 0
 function InitializeAgent()
 
     ShardePosition.StoreInformation(ID, {PositionX,PositionY})
+    
+    Base_Position = {PositionX,PositionY}
     --[==[
     say("New Explorer")
     for i,v in ipairs(Agent.getMemberOfGroups(ID)) do
@@ -57,4 +59,10 @@ function CleanUp()
 
 end
 
+
+function assignDeployPosition()
+    
+    
+    
+end
 
