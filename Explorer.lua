@@ -2,22 +2,23 @@ Move = require "ranalib_movement"
 Collision = require "ranalib_collision"
 Agent = require "ranalib_agent"
 Event =  require "ranalib_event"
-Variables = require "Libs/Variables"
-Constants = require "Libs/Constants"
-SharedPosition = require "Libs/SharedPosition"
+Variables = require "Libs.Variables"
+Constants = require "Libs.Constants"
+SharedPosition = require "Libs.SharedPosition"
 Map = require "ranalib_map" 
-Utilities = require "Libs/Utilities"
-Inspect = require "Libs/inspect"
+Utilities = require "Libs.Utilities"
+State = require "Libs.RobotState"
+Inspect = require "Libs.inspect"
 
 --parameters
 Counter = 0
 Group_ID = 0
-PosDeploy = {}
+TargetPosition = {}
 
 
 function InitializeAgent()
     SharedPosition.StoreInformation(ID, {PositionX,PositionY})
-    PosDeploy = {PositionX,PositionY}
+    TargetPosition = {PositionX,PositionY}
     
 end
 
@@ -34,8 +35,8 @@ function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
 
 	elseif eventDescription == "servingDeployPosition" and ID ~= sourceID then
         l_print("Explorer: " .. ID .. " has recieved a deploy position, from Base: " .. sourceID )
-        PosDeploy  = eventTable
-        say(Inspect.inspect(PosDeploy))
+        TargetPosition  = eventTable
+        say(Inspect.inspect(TargetPosition))
 	end
 end
 
@@ -50,11 +51,11 @@ function TakeStep()
     --Search()
     --SharedPosition.StoreInformation(ID, {PositionX,PositionY})
 
-    if PositionX ~= PosDeploy[1] or PositionY ~= PosDeploy[2] then
+    if PositionX ~= TargetPosition[1] or PositionY ~= TargetPosition[2] then
         --say("I am not ready yet " .. ID)
-        Utilities.moveTorus(PosDeploy[1],PosDeploy[2])
+        Utilities.moveTorus(TargetPosition[1],TargetPosition[2])
     else
-        say("I'm Ready")
+        --say("I'm Ready")
     end
 end
 
@@ -81,4 +82,35 @@ end
 
 function CleanUp()
 
+end
+
+function AddInfoToMemory(info)
+    if UsedMemory ~= TotalMemory then
+          table.insert(Memory, info)
+          UsedMemory = UsedMemory + 1
+    end
+end
+
+function RemoveInfoFromMemory(index)
+    if Memory[index] ~= nil then
+          table.remove(Memory, index)
+          UsedMemory = UsedMemory - 1
+    end
+end
+
+function AlterInfoFromMemory(info, index)
+    if Memory[index] ~= nil then
+          table.insert(Memory, index, info)
+    else
+          AddInfoToMemory(index, info)
+    end
+end
+
+function GetMemory(index)
+    return Memory[index]
+end
+
+function ClearMemory()
+    Memory = {}
+    UsedMemory = 0
 end

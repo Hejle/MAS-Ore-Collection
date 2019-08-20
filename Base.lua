@@ -52,11 +52,16 @@ function  GenerateDeployPositions()
     
     PosY = PositionY + Variables.P
     if PosY > ENV_HEIGHT then
+        PosY = PosY - ENV_HEIGHT
     end
     PosExplorer = {PosX,}
 
     for i=1, Variables.X do
-        PosX = PositionX + 10* i
+        if i % 2 == 0 then
+            PosX = PositionX + 10* i
+        else
+            PosX = PositionX - 10* i
+        end
         if PosX > ENV_WIDTH then
             PosX = PosX - ENV_WIDTH
         end
