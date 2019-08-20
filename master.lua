@@ -19,7 +19,7 @@ function InitializeAgent()
 
 	for k,v in pairs(Bases) do
 		for i=1,Variables.X do
-			local info = ShardePosition.GetInformation(v)
+			local info = SharedPosition.GetInformation(v)
 			Agent.addAgent("Explorer.lua", info[1], info[2], v)
 		end
 	end
