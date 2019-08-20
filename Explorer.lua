@@ -5,7 +5,7 @@ Event =  require "ranalib_event"
 Variables = require "Libs.Variables"
 Constants = require "Libs.Constants"
 SharedPosition = require "Libs.SharedPosition"
-Map = require "ranalib_map" 
+Map = require "ranalib_map"
 Utilities = require "Libs.Utilities"
 State = require "Libs.RobotState"
 Inspect = require "Libs.inspect"
@@ -14,6 +14,7 @@ Inspect = require "Libs.inspect"
 Counter = 0
 Group_ID = 0
 TargetPosition = {}
+MyState = State.Base
 
 
 function InitializeAgent()
@@ -37,6 +38,7 @@ function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
         l_print("Explorer: " .. ID .. " has recieved a deploy position, from Base: " .. sourceID )
         TargetPosition  = eventTable
         say(Inspect.inspect(TargetPosition))
+        MyState = State.Deploying
 	end
 end
 
@@ -52,10 +54,9 @@ function TakeStep()
     --SharedPosition.StoreInformation(ID, {PositionX,PositionY})
 
     if PositionX ~= TargetPosition[1] or PositionY ~= TargetPosition[2] then
-        --say("I am not ready yet " .. ID)
         Utilities.moveTorus(TargetPosition[1],TargetPosition[2])
     else
-        --say("I'm Ready")
+        MyState = State.Deployed
     end
 end
 
