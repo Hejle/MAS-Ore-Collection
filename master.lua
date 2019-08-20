@@ -5,7 +5,6 @@ Agent = require "ranalib_agent"
 Variables = require "Variables"
 Constants = require "Constants"
 SharedPosition = require "SharedPosition"
-
 Bases = {}
 
 
@@ -21,6 +20,10 @@ function InitializeAgent()
 		for i=1,Variables.X do
 			local info = ShardePosition.GetInformation(v)
 			Agent.addAgent("Explorer.lua", info[1], info[2], v)
+		end
+		for i=1,Variables.Y do
+			local info = ShardePosition.GetInformation(v)
+			Agent.addAgent("Transporter.lua", info[1], info[2], v)
 		end
 	end
 

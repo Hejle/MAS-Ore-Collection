@@ -13,6 +13,6 @@ variables.S = 100 -- Memorysize of each robot
 variables.T = 100 -- Maximum number of cycles
 variables.W = 100 -- Maximum number of ore a robot can grab
 variables.X = 1 -- Number of explorers per base
-variables.Y = 100 -- Number of transporters per base
+variables.Y = 1 -- Number of transporters per base
 
 return variables
