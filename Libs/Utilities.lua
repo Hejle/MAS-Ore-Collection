@@ -8,6 +8,14 @@ Variables = require "Libs/Variables"
 Constants = require "Libs/Constants"
 SharedPosition = require "Libs/SharedPosition"
 Map = require "ranalib_map"  
+Stat  = require"ranalib_statistic"
+
+function randomWithStep(first, last, stepSize)
+    local maxSteps = math.floor((last-first)/stepSize)
+    return first + stepSize * Stat.randomInteger(0, maxSteps)
+end
+
+
 
 function Utilities.moveTorus(x,y)
 

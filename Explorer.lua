@@ -44,6 +44,11 @@ end
 
 function HandleEvent(event)
 
+    if eventDescription == "servingDeployPosition" and ID ~= sourceID then
+        l_print("Base: " .. sourceID .. " has provided a deploy position." )
+        PosExplorer  = table.remove( DeployPositionsList, 1)
+		Event.emit {speed = 343, description = "servingDeployPosition", table = PosExplorer}	
+	end
 end
 
 function CleanUp()
