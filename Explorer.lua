@@ -7,21 +7,55 @@ Constants = require "Libs/Constants"
 SharedPosition = require "Libs/SharedPosition"
 Map = require "ranalib_map" 
 Utilities = require "Libs/Utilities"
+Inspect = require "Libs/inspect"
 
 --parameters
 Counter = 0
+Group_ID = 0
+PosDeploy = {}
 
 
 function InitializeAgent()
     SharedPosition.StoreInformation(ID, {PositionX,PositionY})
+    PosDeploy = {PositionX,PositionY}
+    
 end
 
+function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)	
+
+    if eventDescription == "init" and ID ~= sourceID then
+       if(eventTable ~= nil) then
+        Group_ID = eventTable["group"]
+        l_print("Explorer: " .. ID .. " has Group_ID: " .. Group_ID )
+       else
+        l_print("ERROR: eventable empty." )
+       end
+
+
+	elseif eventDescription == "servingDeployPosition" and ID ~= sourceID then
+        l_print("Explorer: " .. ID .. " has recieved a deploy position, from Base: " .. sourceID )
+        PosDeploy  = eventTable
+        say(Inspect.inspect(PosDeploy))
+	end
+end
 
 function TakeStep()
 
-    -- Update Agent Information
-    Search()
-    SharedPosition.StoreInformation(ID, {PositionX,PositionY})
+    if Counter == 0 then
+        Event.emit {speed = 343, description = "deployPositionRequested",targetID = Group_ID}	
+    end
+
+    Counter = Counter + 1
+    
+    --Search()
+    --SharedPosition.StoreInformation(ID, {PositionX,PositionY})
+
+    if PositionX ~= PosDeploy[1] or PositionY ~= PosDeploy[2] then
+        --say("I am not ready yet " .. ID)
+        Utilities.moveTorus(PosDeploy[1],PosDeploy[2])
+    else
+        say("I'm Ready")
+    end
 end
 
 function Search()
@@ -39,26 +73,12 @@ function Search()
 	--	PositionY + l_getRandomInteger(-Variables.P, Variables.P)
 	--}
     --Move.to {x = 100, y = 100, speed = 10}
-     Utilities.moveTorus(10,10)
+    
+
 end
 
-function HandleEvent(event)
 
-    if eventDescription == "servingDeployPosition" and ID ~= sourceID then
-        l_print("Base: " .. sourceID .. " has provided a deploy position." )
-        PosExplorer  = table.remove( DeployPositionsList, 1)
-		Event.emit {speed = 343, description = "servingDeployPosition", table = PosExplorer}	
-	end
-end
 
 function CleanUp()
 
 end
-
-
-function assignDeployPosition()
-    
-
-    
-end
-

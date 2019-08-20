@@ -26,7 +26,8 @@ function TakeStep()
       
 end
 
-function HandleEvent(event)
+function handleEvent(event)
+
 end
 
 function CleanUp()

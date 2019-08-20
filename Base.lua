@@ -5,6 +5,7 @@ Event =  require "ranalib_event"
 Variables = require "Libs/Variables"
 Constants = require "Libs/Constants"
 SharedPosition = require "Libs/SharedPosition"
+Inspect = require "Libs/inspect"
 
 --parameters
 Counter = 0
@@ -14,21 +15,31 @@ DeployPositionsList = {}
 function InitializeAgent()
     SharedPosition.StoreInformation(ID, {PositionX,PositionY})
     Agent.changeColor{id=ID, r=128,g=0,b=128}
+    GenerateDeployPositions()
 end
 
 
 function TakeStep()
+    if Counter == 0 then
+        InitRobots()
+    end
+    Counter = Counter + 1
+end
+
+function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)	
+    
+
+    if eventDescription == "deployPositionRequested" and ID ~= sourceID then
+        l_print("Base: " .. ID .. " , Explorer: " .. sourceID .. " has requested a deploy position." )
+        PosExplorer  = table.remove( DeployPositionsList, 1)
+        --say(Inspect.inspect(DeployPositionsList))
+		Event.emit {speed = 343, description = "servingDeployPosition", table = PosExplorer, targetID = sourceID}	
+	end
 
 end
 
-function HandleEvent(event)
-
-    if eventDescription == "deployPositionRequested" and ID ~= sourceID then
-        l_print("Explorer: " .. sourceID .. " has requested a deploy position." )
-        PosExplorer  = table.remove( DeployPositionsList, 1)
-		Event.emit {speed = 343, description = "servingDeployPosition", table = PosExplorer}	
-	end
-
+function InitRobots()
+    Event.emit {speed = 343, description = "init", table = {group=ID}, groupID = ID}
 end
 
 function CleanUp()
@@ -40,8 +51,8 @@ end
 function  GenerateDeployPositions()
     
     for i=1, Variables.X do
-        PosX = PositionX + 10
-        PosExplorer = {PosX,PositionY}
+        PosX = PositionX + 10*i
+        PosExplorer = {PosX,PositionY + 5}
         table.insert(DeployPositionsList,i,PosExplorer)
     end
 
