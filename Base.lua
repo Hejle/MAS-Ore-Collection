@@ -52,9 +52,18 @@ end
 
 function  GenerateDeployPositions()
     
+    PosY = PositionY + Variables.P
+    if PosY > ENV_HEIGHT then
+    end
+    PosExplorer = {PosX,}
+
     for i=1, Variables.X do
-        PosX = PositionX + 10*i
-        PosExplorer = {PosX,PositionY + 5}
+        PosX = PositionX + 10* i
+        if PosX > ENV_WIDTH then
+            PosX = PosX - ENV_WIDTH
+        end
+        PosExplorer = {PosX,PositionY + Variables.P}
+        
         table.insert(DeployPositionsList,i,PosExplorer)
     end
 
