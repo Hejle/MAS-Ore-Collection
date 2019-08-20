@@ -21,7 +21,7 @@ function TakeStep()
         SharedPosition.StoreInformation(ID, {PositionX,PositionY})
 end
 
-function HandleEvent(event)
+function handleEvent(event)
 
 end
 
