@@ -15,7 +15,7 @@ variables.S = 10 -- Memorysize of each robot
 variables.T = 100 -- Maximum number of cycles
 variables.W = 100 -- Maximum number of ore a robot can grab
 variables.X = 20 -- Number of explorers per base
-variables.Y = 1 -- Number of transporters per base
+variables.Y = 0 -- Number of transporters per base
 variables.W = variables.P-1 -- Separation distance between explorers when being deployed (x-axis)
 variables.Z = variables.P-1 -- Separation distance between explorers when being deployed (y-axis)
 

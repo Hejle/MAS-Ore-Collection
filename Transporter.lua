@@ -162,7 +162,7 @@ function UpdateEnergy(e)
 end
 
 function GetTarget(pos)
-      local result = Utilities.GetValueWithSortestDistance(Memory, pos, 0, "GetTarget")
+      local result = Utilities.GetValueWithSortestDistance(Memory, pos, 0)
       if result == nil then
             return {}
       end
