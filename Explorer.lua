@@ -14,11 +14,13 @@ Variables = require "Libs.Variables"
 --parameters
 Counter = 0
 Group_ID = 0
-TargetPosition = {PositionX, PositionY}
-CurrentPosition = {PositionX, PositionY}
-MaxPose = {}
-TargetOrientation = ""
+DeployPosition = {}
+CurrentPosition = {}
+LastPosition = {}
+DeployOrientation = ""
 BasePosition = {}
+BaseEntrancePosition = {}
+BaseExitPosition = {}
 TotalMemory = Variables.S
 TotalEnergy = Variables.E
 UsedEnergy = 0
@@ -29,7 +31,7 @@ MyState = State.Base
 
 function InitializeAgent()
     SharedPosition.StoreInformation(ID, {PositionX, PositionY})
-    TargetPosition = {PositionX, PositionY}
+    CurrentPosition = {PositionX, PositionY}
 end
 
 function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
@@ -38,60 +40,80 @@ function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
         if (eventTable ~= nil) then
             Group_ID = eventTable["group"]
             BasePosition = eventTable["BasePosition"]
+            BaseEntrancePosition = {BasePosition[1], BasePosition[2] - 1}
+            BaseExitPosition = {BasePosition[1], BasePosition[2] + 1}
         --l_print("Explorer: " .. ID .. " has Group_ID: " .. Group_ID)
         else
             l_print("ERROR: eventable empty.")
         end
     
     elseif eventDescription == "servingDeployPosition" and ID ~= sourceID then
-        --l_print("Explorer: " .. ID .. " has recieved a deploy position, from Base: " .. sourceID)
-        TargetPosition = eventTable["position"]
-        TargetOrientation = eventTable["orientation"]
-        MyState = State.Deploying
+        --l_print("Explorer: " .. ID .. " has recieved a deploy position, from Base: " .. sourceID .. " , " .. Inspect.inspect(eventTable))
+        DeployPosition = eventTable["position"]
+        DeployOrientation = eventTable["orientation"]
+        MyState = State.ExitBase
+    elseif eventDescription == "baseAccesGranted" and ID ~= sourceID then
+        MyState = State.PermissionToLand
     end
+
 end
 
 function TakeStep()
-    if UsedMemory == TotalMemory and MyState ~= State.ReturningMemoryFull then
-        TargetPosition = BasePosition
-        MyState = State.ReturningMemoryFull
-        MaxPose = {PositionX, PositionY, TargetOrientation}
-    end
-
-    if UsedEnergy == TotalEnergy and MyState ~= State.ReturningBatteryLow then
-        TargetPosition = BasePosition
-        MyState = State.ReturningBatteryLow
-        MaxPose = {PositionX, PositionY, TargetOrientation}
-    end
-    --SharedPosition.StoreInformation(ID, {PositionX,PositionY})
-    if not Utilities.comparePoints(CurrentPosition, TargetPosition) then
-        if MyState == State.ReturningMemoryFull  or MyState == State.ReturningBatteryLow then
-            Utilities.moveTorus(TargetPosition, BasePosition)
-        else
-            Utilities.moveTorus(TargetPosition)
-        end
-    else
-        if MyState == State.Deploying then
-            MyState = State.Exploring
-        end
-        if MyState == State.Exploring then
-            Search()
-            getNextStep()-- Remeber to set the distance between steps properly, right now is only 1 pixel at a time
-        end
-        if MyState == State.ReturningMemoryFull or MyState == State.ReturningBatteryLow then
-            MyState = State.Base
-            Event.emit{speed = 343, description = "updateOreList", table = Memory, targetID = Group_ID}
-            Event.emit{speed = 343, description = "updateDeployPositionsList", table = MaxPose, targetID = Group_ID}
-            ClearMemory()
-        end
-        
-        if MyState == State.Base then
-            if UsedEnergy == 0 then
-            Event.emit{speed = 343, description = "deployPositionRequested", targetID = Group_ID}
-            MyState = State.Exploring
-            end
-        end
     
+    if MyState == State.Deploying then
+        if Utilities.comparePoints(CurrentPosition, DeployPosition) then
+            MyState = State.Exploring
+        else
+            Utilities.moveTorus(DeployPosition)
+        end
+        CheckEnergyStatus()
+    elseif MyState == State.Exploring then
+        -- Remeber to set the distance between steps properly, right now is only 1 pixel at a time
+        NextPosition = getNextStep(CurrentPosition, DeployOrientation)
+        Utilities.moveTorus(NextPosition)
+        Search()
+        CheckEnergyStatus()
+        CheckMemoryStatus()
+    
+    elseif MyState == State.ReturningMemoryFull or MyState == State.ReturningBatteryLow then
+        if Utilities.distance(CurrentPosition, BasePosition) <= Variables.I then
+            Event.emit{speed = 0, description = "baseAccesRequest", targetID = Group_ID}
+            MyState = State.WaitingToLand
+        else
+            Utilities.moveTorus(BaseEntrancePosition)
+        end
+    elseif MyState == State.PermissionToLand then
+        if Utilities.comparePoints(CurrentPosition, BaseEntrancePosition) then
+            MyState = State.EnterBase
+            Event.emit{speed = 343, description = "updateOreList", table = Memory, targetID = Group_ID}
+            Event.emit{speed = 343, description = "updateDeployPositionsList", table = LastPosition, targetID = Group_ID}
+            ClearMemory()
+        else
+            Utilities.moveTorus(BaseEntrancePosition,BasePosition)
+        end
+    elseif MyState == State.EnterBase then
+        if Utilities.comparePoints(CurrentPosition, BasePosition) then
+            MyState = State.Base
+        else
+            Utilities.moveTorus(BasePosition,BasePosition)
+        end
+    elseif MyState == State.Base then
+        if UsedEnergy == 0 then
+            Event.emit{speed = 343, description = "deployPositionRequested", targetID = Group_ID}
+            MyState = State.WaitForOrders
+        else
+            -- stay in the base until the battery has been charged
+        end
+    elseif MyState == State.ExitBase then
+        if Utilities.comparePoints(CurrentPosition, BaseExitPosition) then
+            MyState = State.Deploying
+        else
+            Utilities.moveTorus(BaseExitPosition,BasePosition)
+        end
+    elseif MyState == State.WaitForOrders then
+        -- Do nothing
+    elseif MyState == State.WaitingToLand then
+        -- Do nothing
     end
     
     UpdateEnergy()
@@ -99,7 +121,22 @@ function TakeStep()
 
 end
 
+function CheckEnergyStatus()
+    if UsedEnergy >= TotalEnergy then
+        MyState = State.ReturningBatteryLow
+        LastPosition = {PositionX, PositionY, DeployOrientation}
+    end
+end
+
+function CheckMemoryStatus()
+    if UsedMemory >= TotalMemory then
+        MyState = State.ReturningMemoryFull
+        LastPosition = {PositionX, PositionY, DeployOrientation}
+    end
+end
+
 function UpdateEnergy()
+    StateEnergyCost = 0
     if MyState == State.Deploying or MyState == State.ReturningMemoryFull or MyState == State.ReturningBatteryLow then
         StateEnergyCost = Variables.Q
     elseif MyState == State.Exploring then
@@ -127,59 +164,61 @@ function CleanUp()
 
 end
 
-function getNextStep()
+function getNextStep(position, orientation)
     
-    if TargetOrientation == "North" then
+    if orientation == "North" then
         
-        TargetPosition = {PositionX, PositionY + 1}
+        position = {PositionX, PositionY + 1}
         Agent.changeColor{r = 0, g = 255, b = 0}
     
-    elseif TargetOrientation == "South" then
+    elseif orientation == "South" then
         
-        TargetPosition = {PositionX, PositionY - 1}
+        position = {PositionX, PositionY - 1}
         Agent.changeColor{r = 255, g = 255, b = 255}
     
-    elseif TargetOrientation == "East" then
+    elseif orientation == "East" then
         
-        TargetPosition = {PositionX + 1, PositionY}
+        position = {PositionX + 1, PositionY}
         Agent.changeColor{r = 0, g = 0, b = 255}
     
-    elseif TargetOrientation == "West" then
+    elseif orientation == "West" then
         
-        TargetPosition = {PositionX - 1, PositionY}
+        position = {PositionX - 1, PositionY}
     
-    elseif TargetOrientation == "NorthWest" then
+    elseif orientation == "NorthWest" then
         
-        TargetPosition = {PositionX - 1, PositionY + 1}
+        position = {PositionX - 1, PositionY + 1}
     
-    elseif TargetOrientation == "SouthWest" then
+    elseif orientation == "SouthWest" then
         
-        TargetPosition = {PositionX - 1, PositionY - 1}
+        position = {PositionX - 1, PositionY - 1}
     
-    elseif TargetOrientation == "NorthEast" then
+    elseif orientation == "NorthEast" then
         
-        TargetPosition = {PositionX + 1, PositionY + 1}
+        position = {PositionX + 1, PositionY + 1}
     
-    elseif TargetOrientation == "SouthEast" then
+    elseif orientation == "SouthEast" then
         
-        TargetPosition = {PositionX + 1, PositionY - 1}
+        position = {PositionX + 1, PositionY - 1}
     end
     
-    if TargetPosition[1] >= ENV_WIDTH then
-        TargetPosition[1] = TargetPosition[1] - ENV_WIDTH
+    if position[1] >= ENV_WIDTH then
+        position[1] = position[1] - ENV_WIDTH
     end
     
-    if TargetPosition[1] < 0 then
-        TargetPosition[1] = ENV_WIDTH + TargetPosition[1]
+    if position[1] < 0 then
+        position[1] = ENV_WIDTH + position[1]
     end
     
-    if TargetPosition[2] >= ENV_HEIGHT then
-        TargetPosition[2] = TargetPosition[2] - ENV_HEIGHT
+    if position[2] >= ENV_HEIGHT then
+        position[2] = position[2] - ENV_HEIGHT
     end
     
-    if TargetPosition[2] < 0 then
-        TargetPosition[2] = ENV_HEIGHT + TargetPosition[2]
+    if position[2] < 0 then
+        position[2] = ENV_HEIGHT + position[2]
     end
+    
+    return position
 
 end
 

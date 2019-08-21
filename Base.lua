@@ -19,7 +19,7 @@ function InitializeAgent()
     Agent.changeColor{id=ID, r=128,g=0,b=128}
     deployPositionsList = Utilities.GenerateDeployPositions(deployPositionsList)
     KnownOres = {{2,4}, {25,4}, {15,4}, {1,4}, {10,4}}
-    say("list is: " .. Inspect.inspect(SendOre(20000)))
+    --say("list is: " .. Inspect.inspect(SendOre(20000)))
 end
 
 function TakeStep()
@@ -31,9 +31,7 @@ function TakeStep()
 end
 
 function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
-    
     if eventDescription == "deployPositionRequested" and ID ~= sourceID then
-        --l_print("Base: " .. ID .. " , Explorer: " .. sourceID .. " has requested a deploy position.")
         ExplorerPose = table.remove(deployPositionsList, 1)
         if ExplorerPose ~= nil then
             Event.emit{speed = 343, description = "servingDeployPosition", table = {position = {ExplorerPose[1], ExplorerPose[2]}, orientation = ExplorerPose[3]}, targetID = sourceID}
@@ -41,10 +39,11 @@ function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
             Event.emit{speed = 343, description = "servingDeployPosition", table = {position = {PositionX, PositionY}, orientation = "nil"}, targetID = sourceID}
         end
     elseif eventDescription == "updateDeployPositionsList" and ID ~= sourceID then
-        --say("Update DeployPositionList " .. sourceID)
         table.insert(deployPositionsList, eventTable)
     elseif eventDescription == "updateOreList" and ID ~= sourceID then
-        say("Update OreList: " .. sourceID)
+        --UpdateOreList()
+    elseif eventDescription == "baseAccesRequest" and ID  ~= sourceID then
+        Event.emit{speed = 0, description = "baseAccesGranted", targetID = sourceID}
     end
 
 end
@@ -58,29 +57,6 @@ function CleanUp()
 
 end
 
-function  GenerateDeployPositions()
-    
-    PosY = PositionY + Variables.P
-    if PosY > ENV_HEIGHT then
-        PosY = PosY - ENV_HEIGHT
-    end
-    PosExplorer = {PosX,}
-
-    for i=1, Variables.X do
-        if i % 2 == 0 then
-            PosX = PositionX + 10* i
-        else
-            PosX = PositionX - 10* i
-        end
-        if PosX > ENV_WIDTH then
-            PosX = PosX - ENV_WIDTH
-        end
-        PosExplorer = {PosX,PositionY + Variables.P}
-        
-        table.insert(DeployPositionsList,i,PosExplorer)
-    end
-
-end
 
 function StoreCoordinates(list)
     for i=1,#list do
