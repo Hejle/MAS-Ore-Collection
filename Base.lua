@@ -9,7 +9,7 @@ Utilities = require "Libs.Utilities"
 
 --parameters
 Counter = 0
-deployPositionsList = {}
+DeployPositionsList = {}
 KnownOresUncollected = {}
 KnownOresBeingCollected = {}
 ExplorerPose = {}
@@ -17,7 +17,7 @@ ExplorerPose = {}
 function InitializeAgent()
     SharedPosition.StoreInformation(ID, {PositionX,PositionY})
     Agent.changeColor{id=ID, r=128,g=0,b=128}
-    deployPositionsList = Utilities.GenerateDeployPositions(deployPositionsList)
+    DeployPositionsList = Utilities.GenerateDeployPositions(DeployPositionsList)
     KnownOres = {{2,4}, {25,4}, {15,4}, {1,4}, {10,4}}
     say("list is: " .. Inspect.inspect(SendOre(20000)))
 end
@@ -31,10 +31,9 @@ function TakeStep()
 end
 
 function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
-    
     if eventDescription == "deployPositionRequested" and ID ~= sourceID then
         --l_print("Base: " .. ID .. " , Explorer: " .. sourceID .. " has requested a deploy position.")
-        ExplorerPose = table.remove(deployPositionsList, 1)
+        ExplorerPose = table.remove(DeployPositionsList, 1)
         if ExplorerPose ~= nil then
             Event.emit{speed = 343, description = "servingDeployPosition", table = {position = {ExplorerPose[1], ExplorerPose[2]}, orientation = ExplorerPose[3]}, targetID = sourceID}
         else
@@ -42,7 +41,7 @@ function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
         end
     elseif eventDescription == "updateDeployPositionsList" and ID ~= sourceID then
         --say("Update DeployPositionList " .. sourceID)
-        table.insert(deployPositionsList, eventTable)
+        table.insert(DeployPositionsList, eventTable)
     elseif eventDescription == "updateOreList" and ID ~= sourceID then
         say("Update OreList: " .. sourceID)
     end
@@ -59,7 +58,6 @@ function CleanUp()
 end
 
 function  GenerateDeployPositions()
-    
     PosY = PositionY + Variables.P
     if PosY > ENV_HEIGHT then
         PosY = PosY - ENV_HEIGHT
@@ -76,7 +74,7 @@ function  GenerateDeployPositions()
             PosX = PosX - ENV_WIDTH
         end
         PosExplorer = {PosX,PositionY + Variables.P}
-        
+
         table.insert(DeployPositionsList,i,PosExplorer)
     end
 
