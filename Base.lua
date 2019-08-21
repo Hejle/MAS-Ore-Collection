@@ -35,11 +35,11 @@ function TakeStep()
     if Counter == 0 then
         InitRobots()
     end
-
-    if #WaitingTransporters > 0 then
+    if Utilities.IsNotEmpty(WaitingTransporters) then
         local id, value = next(WaitingTransporters)
         local list = SendOre(value[1], value[2])
         Event.emit{speed = 343, description = Events.RetrieveOrders, table = list, targetID = id}
+        WaitingTransporters[id] = nil
     end
     Counter = Counter + 1
 end
@@ -74,7 +74,6 @@ function InitRobots()
     initTable["BasePosition"] = BasePos
     initTable["BaseExit"] = BaseExitPos
     initTable["BaseEntrance"] = BaseEntrancePos
-    say(Inspect.inspect(initTable))
     Event.emit{speed = 343, description = "init", table = initTable, groupID = ID}
 end
 

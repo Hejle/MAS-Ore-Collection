@@ -27,30 +27,51 @@ Memory = {}
 
 TotalEnergy = Variables.E
 UsedEnergy = 0
-MyState = State.Base
+MyState = State.NotInit
 
 BackpackSize = Variables.W
 Backpack = 0
 TimeOut = 0
 
-
 function InitializeAgent()
-      SharedPosition.StoreInformation(ID, {PositionX,PositionY})
+      SharedPosition.StoreInformation(ID, {PositionX, PositionY})
+      MyState = State.NotInit
 end
 
+function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
+      if eventDescription == "init" and ID ~= sourceID then
+            if (eventTable ~= nil) then
+                Group_ID = eventTable["group"]
+                BasePosition = eventTable["BasePosition"]
+                BaseEntrancePos = eventTable["BaseEntrance"]
+                BaseExitPos = eventTable["BaseExit"]
+                MyState = State.Base
+            else
+                l_print("ERROR: eventable empty.")
+            end
+        
+      elseif eventDescription == Events.RetrieveOrders then
+            say("Getting Orders: " .. sourceID)
+            say(Inspect.inspect(eventTable))
+            AddInfoListToMemory(eventTable)
+            MyState = State.ExitBase
+            TimeOut = 0
+      end
+end
 
 function TakeStep()
+      say(Inspect.inspect(MyState))
       local CurrentPosition = {PositionX, PositionY}
       local EnergyToGetHome = 0
-      if BasePosition ~= nil then
+      if not #BasePosition == 2 then
             EnergyToGetHome = Utilities.GetEnergyNeeded(CurrentPosition, BasePosition)
       end
-      local EnergyToGetHome = Utilities.GetEnergyNeeded(CurrentPosition, BasePosition)
       if MyState == State.Base and UsedEnergy == 0 and Backpack == 0 then
             if UsedEnergy == 0 and Backpack == 0 then
                   if TimeOut == 0 then
                         if UpdateEnergy(Variables.R) then
                               Event.emit{speed = 343, description = Events.RequestOrders, table = {transporterID = ID, energy=TotalEnergy, backPack=BackpackSize}, targetID = Group_ID}
+                              say("Requested")
                               TimeOut = 1000
                         end
                   end
@@ -58,15 +79,17 @@ function TakeStep()
             end
             UpdateEnergy(-Variables.Q) --Recharging
       end
-      
-      if MyState ~= State.Returning and EnergyToGetHome + 15*Variables.Q < TotalEnergy - UsedEnergy then
-            if  EnergyToGetHome > TotalEnergy - UsedEnergy then
-                  MyState = State.GoingToDie
+
+      if not ((MyState == State.NotInit) or (MyState == State.Base)) then
+            if MyState ~= State.Returning and EnergyToGetHome + 15*Variables.Q > TotalEnergy - UsedEnergy then
+                  if  EnergyToGetHome > TotalEnergy - UsedEnergy then
+                        MyState = State.GoingToDie
+                  end
+                  MyState = State.Returning
             end
-            MyState = State.Returning
       end
 
-      if MyState ~= State.Returning and MyState ~= State.Base and #Memory == 0 then
+      if (not ((MyState == State.NotInit) or (MyState == State.Base) or (MyState == State.Returning))and #Memory <=0) then
             MyState = State.NoOrders
       end
 
@@ -77,6 +100,7 @@ function TakeStep()
 
       if MyState == State.Entering then
             if Utilities.comparePoints(CurrentPosition, BasePosition) then
+                  say("here")
                   MyState = State.Base
             else
                   if UpdateEnergy(Variables.Q) then
@@ -124,26 +148,6 @@ function TakeStep()
       end
 end
 
-function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
-      if eventDescription == "init" then
-            if (eventTable ~= nil) then
-                Group_ID = eventTable["group"]
-                BasePosition = eventTable["BasePosition"]
-                BaseExitPos = eventTable["BaseEntrance"]
-                BaseEntrancePos = eventTable["BaseExit"]
-            end
-      end
-      if eventDescription == Events.RetrieveOrders then
-            say("Getting Orders: " .. sourceID)
-            AddInfoListToMemory(eventTable)
-            MyState = State.ExitBase
-            TimeOut = 0
-            if(UpdateEnergy(Variables.R)) then
-                  Event.emit{speed = 343, description = Events.OrdersRecieved, table = {}, targetID = Group_ID}
-            end
-      end
-end
-
 function CleanUp()
 
 end
@@ -170,12 +174,16 @@ function GetTarget(pos)
 end
 
 function Mine(pos)
+      say("mining")
       Map.quantumModify(pos[1], pos[2], Constants.ore_color_found, Constants.background_color)
       Backpack = Backpack + 1
 end
 
 
 function AddInfoToMemory(info)
+      if(Utilities.ListContainsPoint(Memory, info)) then
+            return true --Already in memory
+      end
       if UsedMemory + 1 <= TotalMemory then
           table.insert(Memory, info)
           UsedMemory = UsedMemory + 1
@@ -189,8 +197,7 @@ function AddInfoListToMemory(list)
             return false
       else
             for i=1, #list do
-                  table.insert(Memory, list[1])
-                  UsedMemory = UsedMemory - 1
+                  AddInfoToMemory(list[i])
             end
       end
 end
@@ -200,8 +207,10 @@ function RemoveInfoFromMemory(info)
             if Utilities.comparePoints(info, Memory[i]) then
                   table.remove(Memory, i)
                   UsedMemory = UsedMemory - 1
+                  return true
             end
       end
+      return false
 end
 
 function RemoveIndexFromMemory(index)

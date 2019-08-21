@@ -13,5 +13,11 @@ RobotState.EnterBase = "EnterBase"
 RobotState.WaitForOrders = "WaitForOrders"
 RobotState.WaitingToLand = "WaitingToLand"
 RobotState.PermissionToLand = "PermissionToLand"
+RobotState.NotInit = "NotInitialized"
+RobotState.Returning = "Returning"
+RobotState.NoOrders = "NoOrders"
+RobotState.Entering = "Entering"
+RobotState.GatherMinerals = "GatherMinerals"
+RobotState.BackpackFull = "BackpackFull"
 
 return RobotState

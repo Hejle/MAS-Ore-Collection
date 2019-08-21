@@ -32,8 +32,6 @@ MyState = State.Base
 function InitializeAgent()
     SharedPosition.StoreInformation(ID, {PositionX, PositionY})
     CurrentPosition = {PositionX, PositionY}
-    MyState = State.Exploring
-    DeployOrientation = "North"
 end
 
 function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)

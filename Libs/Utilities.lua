@@ -22,6 +22,13 @@ function Utilities.Tablelength(T)
     return count
 end
 
+function Utilities.IsNotEmpty(T)
+    if next(T) == nil then
+        return false
+    end
+    return true
+end
+
 function Utilities.GetEnergyNeeded(point, from)
     local distance = Utilities.distance(point, from, 2)
     local energy = distance * Variables.Q
@@ -86,6 +93,15 @@ function Utilities.comparePoints(point1, point2)
 		return (point1[1] == point2[1] and point1[2] == point2[2])
     end
 	return false
+end
+
+function Utilities.ListContainsPoint(list, point)
+    for i=1,#list do
+          if Utilities.comparePoints(point, Memory[i]) then
+                return true, i
+          end
+    end
+    return false, -1
 end
 
 function Utilities.moveTorus(targetPos,ignoreCollisionPos)
