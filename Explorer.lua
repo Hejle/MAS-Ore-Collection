@@ -70,7 +70,7 @@ function TakeStep()
     
     
     --SharedPosition.StoreInformation(ID, {PositionX,PositionY})
-    if not Utilities.compareTables(CurrentPosition, TargetPosition) then
+    if not Utilities.comparePoints(CurrentPosition, TargetPosition) then
         if MyState == State.ReturningMemoryFull  or MyState == State.ReturningBatteryLow then
             Utilities.moveTorus(TargetPosition, BasePosition)
         else
@@ -132,12 +132,7 @@ function Search()
             Map.quantumModify(table[i].posX, table[i].posY, Constants.ore_color, Constants.ore_color_found)
             AddInfoToMemory({table[i].posX, table[i].posY})
         end
-<<<<<<< HEAD
-        
-	end
-=======
     end
->>>>>>> 80306899099db4015da04e270f91615e959c9427
 end
 
 function CleanUp()
