@@ -40,7 +40,7 @@ function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
             Event.emit{speed = 343, description = "servingDeployPosition", table = {position = {PositionX, PositionY}, orientation = "nil"}, targetID = sourceID}
         end
     elseif eventDescription == "updateDeployPositionsList" and ID ~= sourceID then
-        table.insert(deployPositionsList, eventTable)
+        table.insert(DeployPositionsList, eventTable)
     elseif eventDescription == "updateOreList" and ID ~= sourceID then
         --UpdateOreList()
     elseif eventDescription == "baseAccesRequest" and ID  ~= sourceID then
