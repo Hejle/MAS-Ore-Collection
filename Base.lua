@@ -9,7 +9,7 @@ Utilities = require "Libs.Utilities"
 
 --parameters
 Counter = 0
-deployPositionsList = {}
+DeployPositionsList = {}
 KnownOresUncollected = {}
 KnownOresBeingCollected = {}
 ExplorerPose = {}
@@ -17,7 +17,7 @@ ExplorerPose = {}
 function InitializeAgent()
     SharedPosition.StoreInformation(ID, {PositionX,PositionY})
     Agent.changeColor{id=ID, r=128,g=0,b=128}
-    deployPositionsList = Utilities.GenerateDeployPositions(deployPositionsList)
+    DeployPositionsList = Utilities.GenerateDeployPositions(DeployPositionsList)
     KnownOres = {{2,4}, {25,4}, {15,4}, {1,4}, {10,4}}
     --say("list is: " .. Inspect.inspect(SendOre(20000)))
 end
@@ -32,7 +32,8 @@ end
 
 function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
     if eventDescription == "deployPositionRequested" and ID ~= sourceID then
-        ExplorerPose = table.remove(deployPositionsList, 1)
+        --l_print("Base: " .. ID .. " , Explorer: " .. sourceID .. " has requested a deploy position.")
+        ExplorerPose = table.remove(DeployPositionsList, 1)
         if ExplorerPose ~= nil then
             Event.emit{speed = 343, description = "servingDeployPosition", table = {position = {ExplorerPose[1], ExplorerPose[2]}, orientation = ExplorerPose[3]}, targetID = sourceID}
         else
