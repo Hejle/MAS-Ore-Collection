@@ -1,5 +1,6 @@
 Agent = require "ranalib_agent"
 Event =  require "ranalib_event"
+Events = require "Libs.Events"
 Variables = require "Libs.Variables"
 Constants = require "Libs.Constants"
 Collision = require "ranalib_collision"
@@ -13,9 +14,17 @@ DeployPositionsList = {}
 KnownOresUncollected = {}
 KnownOresBeingCollected = {}
 ExplorerPose = {}
+BasePos = {}
+BaseExitPos = {}
+BaseEntrancePos = {}
+WaitingTransporters = {}
+
 
 function InitializeAgent()
-    SharedPosition.StoreInformation(ID, {PositionX,PositionY})
+    BasePos = {PositionX, PositionY}
+    BaseExitPos = {BasePos[1], BasePos[2] +1}
+    BaseEntrancePos = {BasePos[1], BasePos[2] -1}
+    SharedPosition.StoreInformation(ID, BasePos)
     Agent.changeColor{id=ID, r=128,g=0,b=128}
     DeployPositionsList = Utilities.GenerateDeployPositions(DeployPositionsList)
     KnownOres = {{2,4}, {25,4}, {15,4}, {1,4}, {10,4}}
@@ -27,6 +36,11 @@ function TakeStep()
         InitRobots()
     end
 
+    if #WaitingTransporters > 0 then
+        local id, value = next(WaitingTransporters)
+        local list = SendOre(value[1], value[2])
+        Event.emit{speed = 343, description = Events.RetrieveOrders, table = list, targetID = id}
+    end
     Counter = Counter + 1
 end
 
@@ -37,20 +51,23 @@ function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
         if ExplorerPose ~= nil then
             Event.emit{speed = 343, description = "servingDeployPosition", table = {position = {ExplorerPose[1], ExplorerPose[2]}, orientation = ExplorerPose[3]}, targetID = sourceID}
         else
-            Event.emit{speed = 343, description = "servingDeployPosition", table = {position = {PositionX, PositionY}, orientation = "nil"}, targetID = sourceID}
+            Event.emit{speed = 343, description = "servingDeployPosition", table = {position = BasePos, orientation = "nil"}, targetID = sourceID}
         end
     elseif eventDescription == "updateDeployPositionsList" and ID ~= sourceID then
         --say("Update DeployPositionList " .. sourceID)
         table.insert(DeployPositionsList, eventTable)
     elseif eventDescription == "updateOreList" and ID ~= sourceID then
         say("Update OreList: " .. sourceID)
+        StoreOre(eventTable)
+    elseif eventDescription == Events.RequestOrders then
+        table.insert(WaitingTransporters, eventTable["transporterID"],{eventTable["energy"], eventTable["backPack"]})
     end
 
 end
 
 function InitRobots()
     -- Broadcast the necessary informations for the Agents belonging to this base
-    Event.emit{speed = 343, description = "init", table = {group = ID, BasePosition = {PositionX, PositionY}}, groupID = ID}
+    Event.emit{speed = 343, description = "init", table = {group = ID, BasePosition = BasePos, BaseExit=BaseExitPos, BaseEntrance=BaseEntrancePos}, groupID = ID}
 end
 
 function CleanUp()
@@ -80,28 +97,32 @@ function  GenerateDeployPositions()
 
 end
 
-function StoreCoordinates(list)
+function StoreOre(list)
     for i=1,#list do
-        table.insert(KnownOres, list[i])
+        table.insert(KnownOresBeingCollected, list[i])
     end
 end
 
-function SendOre(energy)
+function SendOre(energy, size)
     local result = {}
-    Utilities.SortUsingDistance(KnownOres, {PositionX, PositionY})    
-    return SendOresSorted(energy, {PositionX, PositionY}, result)
+    Utilities.SortUsingDistance(KnownOresBeingCollected, BasePos)
+    return SendOresSorted(energy, BasePos, result, size)
 end
 
-function SendOresSorted(energy, comparePoint, resultList)
+function SendOresSorted(energy, comparePoint, resultList, size)
     local addedPoint = false
     local usedEnergy = 0
     local newPoint = {}
     local getHomeEnergy = 0
 
+    if #resultList == size then
+        return resultList
+    end
+
     local point = Utilities.GetValueWithSortestDistance(KnownOres, comparePoint)
-    if point ~= nil then 
+    if point ~= nil then
         usedEnergy = Utilities.GetEnergyNeeded(point[1], comparePoint)
-        getHomeEnergy = Utilities.GetEnergyNeeded(point[1], {PositionX, PositionY})
+        getHomeEnergy = Utilities.GetEnergyNeeded(point[1], BasePos)
         if usedEnergy + getHomeEnergy < energy then
             table.insert(resultList, point[1])
             table.insert(KnownOresBeingCollected, point[1])
@@ -111,7 +132,7 @@ function SendOresSorted(energy, comparePoint, resultList)
         end
     end
     if addedPoint then
-        return SendOresSorted(energy - usedEnergy, newPoint, resultList)
+        return SendOresSorted(energy - usedEnergy, newPoint, resultList, size)
     else
         return resultList
     end

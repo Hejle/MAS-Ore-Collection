@@ -184,13 +184,35 @@ function getNextStep()
 end
 
 function AddInfoToMemory(info)
-    if UsedMemory ~= TotalMemory then
+    if UsedMemory + 1 <= TotalMemory then
         table.insert(Memory, info)
         UsedMemory = UsedMemory + 1
+        return true
+    end
+    return false
+end
+
+function AddInfoListToMemory(list)
+    if #list > TotalMemory-UsedMemory then
+          return false
+    else
+          for i=1, #list do
+                table.insert(Memory, list[1])
+                UsedMemory = UsedMemory - 1
+          end
     end
 end
 
-function RemoveInfoFromMemory(index)
+function RemoveInfoFromMemory(info)
+    for i=1, #Memory do
+          if Utilities.comparePoints(info, Memory[i]) then
+                table.remove(Memory, i)
+                UsedMemory = UsedMemory - 1
+          end
+    end
+end
+
+function RemoveIndexFromMemory(index)
     if Memory[index] ~= nil then
         table.remove(Memory, index)
         UsedMemory = UsedMemory - 1
@@ -200,8 +222,9 @@ end
 function AlterInfoFromMemory(info, index)
     if Memory[index] ~= nil then
         table.insert(Memory, index, info)
+        return true
     else
-        AddInfoToMemory(index, info)
+        return AddInfoToMemory(index, info)
     end
 end
 

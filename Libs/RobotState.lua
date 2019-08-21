@@ -7,5 +7,6 @@ RobotState.Exploring = "Exploring"
 RobotState.ReturningMemoryFull = "ReturningMemoryFull"
 RobotState.ReturningBatteryLow = "ReturningBatteryLow"
 RobotState.Error = "Error"
+RobotState.Dead = "Dead"
 
 return RobotState
