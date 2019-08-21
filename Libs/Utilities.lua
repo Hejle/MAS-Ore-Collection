@@ -5,7 +5,7 @@ Collision = require "ranalib_collision"
 Constants = require "Libs.Constants"
 Event = require "ranalib_event"
 Inspect = require "Libs.inspect"
-Map = require "ranalib_map" 
+Map = require "ranalib_map"
 Move = require "ranalib_movement"
 SharedPosition = require "Libs.SharedPosition"
 Stat  = require"ranalib_statistic"
@@ -84,7 +84,7 @@ end
 
 function Utilities.comparePoints(point1, point2)
 	if #point1 == #point2 and #point1 == 2 then
-		return point1[1] == point2[1] and point1[2] == point2[2]
+		return (point1[1] == point2[1] and point1[2] == point2[2])
     end
 	return false
 end
@@ -121,11 +121,27 @@ function Utilities.moveTorus(targetPos,ignoreCollisionPos)
     elseif destY >= Variables.G then
         destY = 0
     end
-
     -- If no other agent is at the destination or the destination is the base
-    if (not Collision.checkCollision(destX,destY))  or (destX == ignoreCollisionPos[1] and destY == ignoreCollisionPos[2]) then
-        -- Moving the Agent	
-        Collision.updatePosition(destX,destY) 
+    if (not Collision.checkCollision(destX, destY))
+        or (destX == ignoreCollisionPos[1] and destY == ignoreCollisionPos[2])
+        or (destX == ignoreCollisionPos[1] and destY == ignoreCollisionPos[2]+1)
+        or (destX == ignoreCollisionPos[1] and destY == ignoreCollisionPos[2]-1)
+        or (destX == ignoreCollisionPos[1] and destY == ignoreCollisionPos[2]+2)
+        or (destX == ignoreCollisionPos[1] and destY == ignoreCollisionPos[2]-2)
+        or (destX == ignoreCollisionPos[1]-1 and destY == ignoreCollisionPos[2])
+        or (destX == ignoreCollisionPos[1]+1 and destY == ignoreCollisionPos[2])
+        or (destX == ignoreCollisionPos[1]-1 and destY == ignoreCollisionPos[2]+1)
+        or (destX == ignoreCollisionPos[1]+1 and destY == ignoreCollisionPos[2]+1)
+        or (destX == ignoreCollisionPos[1]-1 and destY == ignoreCollisionPos[2]-1)
+        or (destX == ignoreCollisionPos[1]+1 and destY == ignoreCollisionPos[2]-1)
+        or (destX == ignoreCollisionPos[1]-1 and destY == ignoreCollisionPos[2]+2)
+        or (destX == ignoreCollisionPos[1]+1 and destY == ignoreCollisionPos[2]+2)
+        or (destX == ignoreCollisionPos[1]-1 and destY == ignoreCollisionPos[2]-2)
+        or (destX == ignoreCollisionPos[1]+1 and destY == ignoreCollisionPos[2]-2)
+        or (destX == ignoreCollisionPos[1]-2 and destY == ignoreCollisionPos[2])
+        or (destX == ignoreCollisionPos[1]+2 and destY == ignoreCollisionPos[2]) then
+        -- Moving the Agent
+        Collision.updatePosition(destX,destY)
     -- If there is a collision
     else
         -- If destination is on the same y
@@ -139,33 +155,33 @@ function Utilities.moveTorus(targetPos,ignoreCollisionPos)
                 -- Change y with the opposite as before
                 destY = PositionY-randStep
             end
-            
+
             -- If still collision
             if Collision.checkCollision(destX,destY) then
                 -- Stay
                 destX = PositionX
                 destY = PositionY
             end
-        
+
         -- If destination is on the same x
         elseif destY ~= PositionY and destX == PositionX then
             -- Change x with either -1 or 1
             local randStep = randomWithStep(-1,1,2)
             destX = PositionX+randStep
-            
+
             -- If still collision
             if Collision.checkCollision(destX,destY) then
                 -- Change x with the opposite as before
                 destX = PositionX-randStep
             end
-            
+
             -- If still collision
             if Collision.checkCollision(destX,destY) then
                 -- Stay
                 destX = PositionX
                 destY = PositionY
             end
-            
+
         -- If destination is diagonal
         elseif destY ~= PositionY and destX ~= PositionX then
             local tempDestX = destX
@@ -177,7 +193,7 @@ function Utilities.moveTorus(targetPos,ignoreCollisionPos)
             else
                 destX = PositionX
             end
-            
+
             -- If still collision
             if Collision.checkCollision(destX,destY) then
                 -- Change the opposite as before
@@ -189,7 +205,7 @@ function Utilities.moveTorus(targetPos,ignoreCollisionPos)
                     destX = PositionX
                 end
             end
-            
+
             -- If still collision
             if Collision.checkCollision(destX,destY) then
                 -- Stay
@@ -197,7 +213,7 @@ function Utilities.moveTorus(targetPos,ignoreCollisionPos)
                 destY = PositionY
             end
         end
-        
+
         -- Update position
         Collision.updatePosition(destX,destY)
 
@@ -215,7 +231,6 @@ function Utilities.GenerateDeployPositions(PoseTable)
     NumPointsSides = 2
 
     offset = Variables.W * NumPointsSides * 2 + Variables.W * 2
-    negativeOffset = -offset
     refX = PositionX
     refY = PositionY
 
@@ -366,26 +381,26 @@ function Utilities.GenerateDeployPositions(PoseTable)
 end
 
 function addPose(PoseTable,pose)
-    
+
     if pose[1] > ENV_WIDTH then
         pose[1] = pose[1] - ENV_WIDTH
     end
-    
+
     if pose[1] < 0 then
         pose[1] = ENV_WIDTH + pose[1]
     end
-    
+
     if pose[2] > ENV_HEIGHT then
         pose[2] = pose[2] - ENV_HEIGHT
     end
-    
+
     if pose[2] < 0 then
         pose[2] = ENV_HEIGHT + pose[2]
     end
-    
+
     table.insert(PoseTable, pose)
 
-    return PoseTable  
+    return PoseTable
 end
 
 return Utilities
