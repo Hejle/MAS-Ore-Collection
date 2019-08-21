@@ -52,8 +52,6 @@ function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
 end
 
 function TakeStep()
-    
-    
     if UsedMemory == TotalMemory and MyState ~= State.ReturningMemoryFull then
         TargetPosition = BasePosition
         MyState = State.ReturningMemoryFull
@@ -65,10 +63,6 @@ function TakeStep()
         MyState = State.ReturningBatteryLow
         MaxPose = {PositionX, PositionY, TargetOrientation}
     end
-
-    
-    
-    
     --SharedPosition.StoreInformation(ID, {PositionX,PositionY})
     if not Utilities.comparePoints(CurrentPosition, TargetPosition) then
         if MyState == State.ReturningMemoryFull  or MyState == State.ReturningBatteryLow then
@@ -77,16 +71,13 @@ function TakeStep()
             Utilities.moveTorus(TargetPosition)
         end
     else
-        
         if MyState == State.Deploying then
             MyState = State.Exploring
         end
-        
         if MyState == State.Exploring then
             Search()
             getNextStep()-- Remeber to set the distance between steps properly, right now is only 1 pixel at a time
         end
-        
         if MyState == State.ReturningMemoryFull or MyState == State.ReturningBatteryLow then
             MyState = State.Base
             Event.emit{speed = 343, description = "updateOreList", table = Memory, targetID = Group_ID}
@@ -103,19 +94,16 @@ function TakeStep()
     
     end
     
-    updadeEnergy()
+    UpdateEnergy()
     CurrentPosition = {PositionX, PositionY}
 
 end
 
-function updadeEnergy()
-    
-    if MyState == State.Deploying then
+function UpdateEnergy()
+    if MyState == State.Deploying or MyState == State.ReturningMemoryFull or MyState == State.ReturningBatteryLow then
         StateEnergyCost = Variables.Q
     elseif MyState == State.Exploring then
         StateEnergyCost = Variables.Q - Variables.O
-    elseif MyState == State.ReturningMemoryFull then
-        StateEnergyCost = Variables.Q
     elseif MyState == State.Base then
         if UsedEnergy > 0 then
             StateEnergyCost = -1

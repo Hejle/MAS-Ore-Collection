@@ -82,7 +82,7 @@ function Utilities.distance(pointFrom, pointTo, delta)
 end
 
 function Utilities.comparePoints(point1, point2)
-	if #table1 == #table2 then
+	if #point1 == #point2 and #point1 == 2 then
 		return point1[1] == point2[1] and point1[2] == point2[2]
     end
 	return false
