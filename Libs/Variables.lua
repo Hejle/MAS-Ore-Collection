@@ -10,7 +10,7 @@ variables.M = 100 -- Coordination Mode (1 = Coop, 0 = Competitive)
 variables.N = 1 -- Number of bases
 variables.P = 5 -- initial perception scope
 variables.Q = 100 -- Cost of a movement action
-variables.S = 100 -- Memorysize of each robot
+variables.S = 10 -- Memorysize of each robot
 variables.T = 100 -- Maximum number of cycles
 variables.W = 100 -- Maximum number of ore a robot can grab
 variables.X = 64 -- Number of explorers per base

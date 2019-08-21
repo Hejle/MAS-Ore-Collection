@@ -1,19 +1,22 @@
-Move = require "ranalib_movement"
-Collision = require "ranalib_collision"
 Agent = require "ranalib_agent"
-Event = require "ranalib_event"
-Variables = require "Libs.Variables"
+Collision = require "ranalib_collision"
 Constants = require "Libs.Constants"
-SharedPosition = require "Libs.SharedPosition"
-Map = require "ranalib_map"
-Utilities = require "Libs.Utilities"
-State = require "Libs.RobotState"
+Event = require "ranalib_event"
 Inspect = require "Libs.inspect"
+Map = require "ranalib_map" 
+Move = require "ranalib_movement"
+SharedPosition = require "Libs.SharedPosition"
+Stat  = require"ranalib_statistic"
+State = require "Libs.RobotState"
+Utilities = require "Libs.Utilities"
+Variables = require "Libs.Variables"
 
 --parameters
 Counter = 0
 Group_ID = 0
 TargetPosition = {PositionX, PositionY}
+CurrentPosition = {PositionX, PositionY}
+MaxPose = {}
 TargetOrientation = ""
 BasePosition = {}
 TotalMemory = Variables.S
@@ -25,11 +28,6 @@ MyState = State.Base
 function InitializeAgent()
     SharedPosition.StoreInformation(ID, {PositionX, PositionY})
     TargetPosition = {PositionX, PositionY}
-
-
-
-
-
 end
 
 function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
@@ -38,49 +36,60 @@ function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
         if (eventTable ~= nil) then
             Group_ID = eventTable["group"]
             BasePosition = eventTable["BasePosition"]
-            l_print("Explorer: " .. ID .. " has Group_ID: " .. Group_ID)
+            --l_print("Explorer: " .. ID .. " has Group_ID: " .. Group_ID)
         else
             l_print("ERROR: eventable empty.")
         end
     
     elseif eventDescription == "servingDeployPosition" and ID ~= sourceID then
-        l_print("Explorer: " .. ID .. " has recieved a deploy position, from Base: " .. sourceID)
+       --l_print("Explorer: " .. ID .. " has recieved a deploy position, from Base: " .. sourceID)
         TargetPosition = eventTable["position"]
         TargetOrientation = eventTable["orientation"]
-        say(Inspect.inspect(TargetPosition))
         MyState = State.Deploying
     end
 end
 
 function TakeStep()
     
-    if Counter == 0 then
-        Event.emit{speed = 343, description = "deployPositionRequested", targetID = Group_ID}
-    end
-    
-    if UsedMemory == TotalMemory then
+
+    if UsedMemory == TotalMemory and MyState ~= State.ReturningMemoryFull then
         TargetPosition = BasePosition
-    end
-    
-    Counter = Counter + 1
+        MyState = State.ReturningMemoryFull
+        MaxPose = {PositionX,PositionY,TargetOrientation}
+    end  
     
     
     
     --SharedPosition.StoreInformation(ID, {PositionX,PositionY})
-    if PositionX ~= TargetPosition[1] or PositionY ~= TargetPosition[2] then
-        Utilities.moveTorus(TargetPosition[1], TargetPosition[2])
+    if not Utilities.compareTables(CurrentPosition,TargetPosition) then
+        Utilities.moveTorus(TargetPosition,BasePosition)
     else
+
         if MyState == State.Deploying then
-            MyState = State.Deployed
-            
+            MyState = State.Exploring            
         end
         
-        if MyState == State.Deployed then
+        if MyState == State.Exploring then
             Search()
-            getNextStep()
-            
+            getNextStep() -- Remeber to set the distance between steps properly, right now is only 1 pixel at a time            
         end
+
+        if MyState == State.ReturningMemoryFull then
+            MyState = State.Base
+            Event.emit{speed = 343, description = "updateOreList", table = Memory , targetID = Group_ID}
+            Event.emit{speed = 343, description = "updateDeployPositionsList", table = MaxPose, targetID = Group_ID}
+            ClearMemory()
+        end
+
+        if MyState == State.Base then
+            Event.emit{speed = 343, description = "deployPositionRequested", targetID = Group_ID}
+            MyState = State.Exploring 
+        end
+
     end
+
+    CurrentPosition = {PositionX, PositionY}
+   
 end
 
 function Search()
