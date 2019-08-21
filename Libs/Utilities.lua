@@ -1,14 +1,15 @@
 local Utilities = {}
 
-Move = require "ranalib_movement"
-Collision = require "ranalib_collision"
 Agent = require "ranalib_agent"
-Event =  require "ranalib_event"
-Variables = require "Libs/Variables"
-Constants = require "Libs/Constants"
-SharedPosition = require "Libs/SharedPosition"
-Map = require "ranalib_map"  
+Collision = require "ranalib_collision"
+Constants = require "Libs.Constants"
+Event = require "ranalib_event"
+Inspect = require "Libs.inspect"
+Map = require "ranalib_map" 
+Move = require "ranalib_movement"
+SharedPosition = require "Libs.SharedPosition"
 Stat  = require"ranalib_statistic"
+Variables = require "Libs.Variables"
 
 function randomWithStep(first, last, stepSize)
     local maxSteps = math.floor((last-first)/stepSize)
@@ -27,7 +28,9 @@ function Utilities.compareTables(table1, table2)
 		return false
 	end
 end
-function Utilities.moveTorus(targetPos,basePos)
+
+function Utilities.moveTorus(targetPos,ignoreCollisionPos)
+    ignoreCollisionPos = ignoreCollisionPos or {Variables.G+2, Variables.G+2}
     local destX = targetPos[1]
     local destY = targetPos[2]
     local directionX = destX-PositionX
@@ -60,7 +63,7 @@ function Utilities.moveTorus(targetPos,basePos)
     end
 
     -- If no other agent is at the destination or the destination is the base
-    if (not Collision.checkCollision(destX,destY))  or (destX == basePos[1] and destY == basePos[2]) then
+    if (not Collision.checkCollision(destX,destY))  or (destX == ignoreCollisionPos[1] and destY == ignoreCollisionPos[2]) then
         -- Moving the Agent	
         Collision.updatePosition(destX,destY) 
     -- If there is a collision
