@@ -1,45 +1,25 @@
 Agent = require "ranalib_agent"
-<<<<<<< HEAD
 Event =  require "ranalib_event"
 Variables = require "Libs.Variables"
 Constants = require "Libs.Constants"
-SharedPosition = require "Libs.SharedPosition"
-Inspect = require "Libs.inspect"
-Utilities = require "Libs.Utilities"
-
---parameters
-Counter = 0
-DeployPositionsList = {}
-KnownOresUncollected = {}
-KnownOresBeingCollected = {}
-
-function InitializeAgent()
-    SharedPosition.StoreInformation(ID, {PositionX,PositionY})
-    Agent.changeColor{id=ID, r=128,g=0,b=128}
-    GenerateDeployPositions()
-    KnownOres = {{2,4}, {25,4}, {15,4}, {1,4}, {10,4}}
-    say("list is: " .. Inspect.inspect(SendOre(20000)))
-=======
 Collision = require "ranalib_collision"
-Constants = require "Libs.Constants"
-Event = require "ranalib_event"
-Inspect = require "Libs.inspect"
-Move = require "ranalib_movement"
 SharedPosition = require "Libs.SharedPosition"
+Inspect = require "Libs.inspect"
 Utilities = require "Libs.Utilities"
-Variables = require "Libs.Variables"
-
 
 --parameters
 Counter = 0
 deployPositionsList = {}
+KnownOresUncollected = {}
+KnownOresBeingCollected = {}
 ExplorerPose = {}
 
 function InitializeAgent()
-    SharedPosition.StoreInformation(ID, {PositionX, PositionY})
-    Agent.changeColor{id = ID, r = 128, g = 0, b = 128}
+    SharedPosition.StoreInformation(ID, {PositionX,PositionY})
+    Agent.changeColor{id=ID, r=128,g=0,b=128}
     deployPositionsList = Utilities.GenerateDeployPositions(deployPositionsList)
->>>>>>> 80306899099db4015da04e270f91615e959c9427
+    KnownOres = {{2,4}, {25,4}, {15,4}, {1,4}, {10,4}}
+    say("list is: " .. Inspect.inspect(SendOre(20000)))
 end
 
 function TakeStep()
@@ -78,9 +58,6 @@ function CleanUp()
 
 end
 
-
-
-<<<<<<< HEAD
 function  GenerateDeployPositions()
     
     PosY = PositionY + Variables.P
@@ -107,12 +84,11 @@ end
 
 function StoreCoordinates(list)
     for i=1,#list do
-        table.insert( KnownOres, {list[i], Constants.NotBeingCollected} )
+        table.insert(KnownOres, list[i])
     end
 end
 
 function SendOre(energy)
-    say("hi")
     local result = {}
     Utilities.SortUsingDistance(KnownOres, {PositionX, PositionY})    
     return SendOresSorted(energy, {PositionX, PositionY}, result)
@@ -128,8 +104,6 @@ function SendOresSorted(energy, comparePoint, resultList)
     if point ~= nil then 
         usedEnergy = Utilities.GetEnergyNeeded(point[1], comparePoint)
         getHomeEnergy = Utilities.GetEnergyNeeded(point[1], {PositionX, PositionY})
-        say("Used Energy: " .. usedEnergy)
-        say("Home Energy: " .. getHomeEnergy)
         if usedEnergy + getHomeEnergy < energy then
             table.insert(resultList, point[1])
             table.insert(KnownOresBeingCollected, point[1])
@@ -143,7 +117,4 @@ function SendOresSorted(energy, comparePoint, resultList)
     else
         return resultList
     end
-
 end
-=======
->>>>>>> 80306899099db4015da04e270f91615e959c9427
