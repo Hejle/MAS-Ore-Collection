@@ -1,6 +1,6 @@
 local sharedPosition = {}
 Shared = require "ranalib_shared"
-Constants = require "Libs/Constants"
+Constants = require "Libs.Constants"
 
 function sharedPosition.GetInformation(ID)
     local result = {}

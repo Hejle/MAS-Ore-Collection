@@ -2,9 +2,9 @@ Move = require "ranalib_movement"
 Collision = require "ranalib_collision"
 Agent = require "ranalib_agent"
 Event =  require "ranalib_event"
-Variables = require "Libs/Variables"
-Constants = require "Libs/Constants"
-SharedPosition = require "Libs/SharedPosition"
+Variables = require "Libs.Variables"
+Constants = require "Libs.Constants"
+SharedPosition = require "Libs.SharedPosition"
 
 --parameters
 Counter = 0
@@ -36,7 +36,6 @@ end
 
 
 function AddInfoToMemory(info)
-      
       if UsedMemory ~= TotalMemory then
             table.insert(Memory, info)
             UsedMemory = UsedMemory + 1

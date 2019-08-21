@@ -69,17 +69,7 @@ function Search()
         end
         
 	end
-	--if no grass is found search a new area
-	--direction = {
-	--	PositionX + l_getRandomInteger(-Variables.P, Variables.P),
-	--	PositionY + l_getRandomInteger(-Variables.P, Variables.P)
-	--}
-    --Move.to {x = 100, y = 100, speed = 10}
-    
-
 end
-
-
 
 function CleanUp()
 

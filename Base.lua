@@ -2,20 +2,24 @@ Move = require "ranalib_movement"
 Collision = require "ranalib_collision"
 Agent = require "ranalib_agent"
 Event =  require "ranalib_event"
-Variables = require "Libs/Variables"
-Constants = require "Libs/Constants"
-SharedPosition = require "Libs/SharedPosition"
-Inspect = require "Libs/inspect"
+Variables = require "Libs.Variables"
+Constants = require "Libs.Constants"
+SharedPosition = require "Libs.SharedPosition"
+Inspect = require "Libs.inspect"
+Utilities = require "Libs.Utilities"
 
 --parameters
 Counter = 0
 DeployPositionsList = {}
-
+KnownOresUncollected = {}
+KnownOresBeingCollected = {}
 
 function InitializeAgent()
     SharedPosition.StoreInformation(ID, {PositionX,PositionY})
     Agent.changeColor{id=ID, r=128,g=0,b=128}
     GenerateDeployPositions()
+    KnownOres = {{2,4}, {25,4}, {15,4}, {1,4}, {10,4}}
+    say("list is: " .. Inspect.inspect(SendOre(20000)))
 end
 
 
@@ -68,6 +72,47 @@ function  GenerateDeployPositions()
         PosExplorer = {PosX,PositionY + Variables.P}
         
         table.insert(DeployPositionsList,i,PosExplorer)
+    end
+
+end
+
+function StoreCoordinates(list)
+    for i=1,#list do
+        table.insert( KnownOres, {list[i], Constants.NotBeingCollected} )
+    end
+end
+
+function SendOre(energy)
+    say("hi")
+    local result = {}
+    Utilities.SortUsingDistance(KnownOres, {PositionX, PositionY})    
+    return SendOresSorted(energy, {PositionX, PositionY}, result)
+end
+
+function SendOresSorted(energy, comparePoint, resultList)
+    local addedPoint = false
+    local usedEnergy = 0
+    local newPoint = {}
+    local getHomeEnergy = 0
+
+    local point = Utilities.GetValueWithSortestDistance(KnownOres, comparePoint)
+    if point ~= nil then 
+        usedEnergy = Utilities.GetEnergyNeeded(point[1], comparePoint)
+        getHomeEnergy = Utilities.GetEnergyNeeded(point[1], {PositionX, PositionY})
+        say("Used Energy: " .. usedEnergy)
+        say("Home Energy: " .. getHomeEnergy)
+        if usedEnergy + getHomeEnergy < energy then
+            table.insert(resultList, point[1])
+            table.insert(KnownOresBeingCollected, point[1])
+            newPoint = point[1]
+            table.remove( KnownOres, point[2])
+            addedPoint = true
+        end
+    end
+    if addedPoint then
+        return SendOresSorted(energy - usedEnergy, newPoint, resultList)
+    else
+        return resultList
     end
 
 end

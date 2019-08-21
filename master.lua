@@ -2,10 +2,11 @@ Stat = require "ranalib_statistic"
 Draw = require "ranalib_draw"
 Map = require "ranalib_map"
 Agent = require "ranalib_agent"
-Variables = require "Libs/Variables"
-Constants = require "Libs/Constants"
-SharedPosition = require "Libs/SharedPosition"
-Inspect = require "Libs/inspect"
+Variables = require "Libs.Variables"
+Constants = require "Libs.Constants"
+SharedPosition = require "Libs.SharedPosition"
+Inspect = require "Libs.inspect"
+Utilities = require "Libs.Utilities"
 Bases = {}
 
 
