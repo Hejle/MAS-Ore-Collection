@@ -1,8 +1,7 @@
 local Utilities = {}
 
-Move = require "ranalib_movement"
-Collision = require "ranalib_collision"
 Agent = require "ranalib_agent"
+<<<<<<< HEAD
 Event =  require "ranalib_event"
 Variables = require "Libs.Variables"
 Constants = require "Libs.Constants"
@@ -10,12 +9,24 @@ SharedPosition = require "Libs.SharedPosition"
 Map = require "ranalib_map"
 Stat  = require"ranalib_statistic"
 Inspect = require "Libs.inspect"
+=======
+Collision = require "ranalib_collision"
+Constants = require "Libs.Constants"
+Event = require "ranalib_event"
+Inspect = require "Libs.inspect"
+Map = require "ranalib_map" 
+Move = require "ranalib_movement"
+SharedPosition = require "Libs.SharedPosition"
+Stat  = require"ranalib_statistic"
+Variables = require "Libs.Variables"
+>>>>>>> 80306899099db4015da04e270f91615e959c9427
 
 function randomWithStep(first, last, stepSize)
     local maxSteps = math.floor((last-first)/stepSize)
     return first + stepSize * Stat.randomInteger(0, maxSteps)
 end
 
+<<<<<<< HEAD
 function Utilities.Tablelength(T)
     local count = 0
     for _ in pairs(T) do count = count + 1 end
@@ -80,11 +91,25 @@ function Utilities.distance(pointFrom, pointTo, delta)
     pos2 = math.sqrt ( dx * dx + dy * dy )
     return math.min( nottorusway, pos1+pos2+delta)
   end
+=======
+function Utilities.compareTables(table1, table2)
+	if #table1 == #table2 then
+		for i=1, #table1 do
+			if table1[i] ~= table2[i] then
+				return false
+			end
+		end
+		return true
+	else
+		return false
+	end
+end
+>>>>>>> 80306899099db4015da04e270f91615e959c9427
 
-
-function Utilities.moveTorus(x,y)
-    local destX = x
-    local destY = y
+function Utilities.moveTorus(targetPos,ignoreCollisionPos)
+    ignoreCollisionPos = ignoreCollisionPos or {Variables.G+2, Variables.G+2}
+    local destX = targetPos[1]
+    local destY = targetPos[2]
     local directionX = destX-PositionX
     local directionY = destY-PositionY
 
@@ -115,7 +140,7 @@ function Utilities.moveTorus(x,y)
     end
 
     -- If no other agent is at the destination or the destination is the base
-    if (not Collision.checkCollision(destX,destY)) then
+    if (not Collision.checkCollision(destX,destY))  or (destX == ignoreCollisionPos[1] and destY == ignoreCollisionPos[2]) then
         -- Moving the Agent	
         Collision.updatePosition(destX,destY) 
     -- If there is a collision
@@ -200,6 +225,184 @@ function Utilities.moveTorus(x,y)
 
 end
 
+-- Sorry for this  collection of fors
+function Utilities.GenerateDeployPositions(PoseTable)
+    
+    NumPointsTops = 4
+    NumPointsSides = 2
+    
+    offset = Variables.W * NumPointsSides * 2 + Variables.W * 2
+    
+    refX = PositionX
+    refY = PositionY
+    
+    for i = 0, (NumPointsTops + 1) do
+        PosX = refX + Variables.W * 2 * i
+        PosY = refY + Variables.Z + offset
+        ExplorerPose = {PosX, PosY, "North"}
+        PoseTable = addPose(PoseTable,ExplorerPose)
+    end
+    
+    refX = PositionX - Variables.W
+    for i = 0, NumPointsTops do
+        PosX = refX - Variables.W * 2 * i
+        PosY = refY + Variables.Z * 2 + offset
+        ExplorerPose = {PosX, PosY, "North"}
+        PoseTable = addPose(PoseTable,ExplorerPose)
+    end
+    
+    refX = PositionX + Variables.W
+    
+    for i = 0, NumPointsTops do
+        PosX = refX + Variables.W * 2 * i
+        PosY = refY + Variables.Z * 2 + offset
+        ExplorerPose = {PosX, PosY, "North"}
+        PoseTable = addPose(PoseTable,ExplorerPose)
+    end
+    
+    refX = PositionX - 2 * Variables.W
+    
+    for i = 0, NumPointsTops do
+        PosX = refX - Variables.W * 2 * i
+        PosY = refY + Variables.Z + offset
+        ExplorerPose = {PosX, PosY, "North"}
+        PoseTable = addPose(PoseTable,ExplorerPose)
+    end
+    
+    refX = PositionX
+    refY = PositionY
+    
+    for i = 0, (NumPointsTops + 1) do
+        PosX = refX + Variables.W * 2 * i
+        PosY = refY - Variables.Z - offset
+        ExplorerPose = {PosX, PosY, "South"}
+        PoseTable = addPose(PoseTable,ExplorerPose)
+    end
+    
+    refX = PositionX - Variables.W
+    for i = 0, NumPointsTops do
+        PosX = refX - Variables.W * 2 * i
+        PosY = refY - Variables.Z * 2 - offset
+        ExplorerPose = {PosX, PosY, "South"}
+        PoseTable = addPose(PoseTable,ExplorerPose)
+    end
+    
+    refX = PositionX + Variables.W
+    
+    for i = 0, NumPointsTops do
+        PosX = refX + Variables.W * 2 * i
+        PosY = refY - Variables.Z * 2 - offset
+        ExplorerPose = {PosX, PosY, "South"}
+        PoseTable = addPose(PoseTable,ExplorerPose)
+    end
+    
+    refX = PositionX - 2 * Variables.W
+    
+    for i = 0, NumPointsTops do
+        PosX = refX - Variables.W * 2 * i
+        PosY = refY - Variables.Z - offset
+        ExplorerPose = {PosX, PosY, "South"}
+        PoseTable = addPose(PoseTable,ExplorerPose)
+    end
+    
+    refX = PositionX
+    refY = PositionY
+    
+    for i = 0, (NumPointsSides + 1) do
+        PosY = refY + Variables.Z * 2 * i
+        PosX = refX + Variables.W
+        ExplorerPose = {PosX, PosY, "East"}
+        PoseTable = addPose(PoseTable,ExplorerPose)
+    end
+    
+    refY = PositionY - Variables.W
+    
+    for i = 0, NumPointsSides do
+        PosY = refY - Variables.Z * 2 * i
+        PosX = refX + Variables.W * 2
+        ExplorerPose = {PosX, PosY, "East"}
+        PoseTable = addPose(PoseTable,ExplorerPose)
+    end
+    
+    refY = PositionY + Variables.W
+    
+    for i = 0, NumPointsSides do
+        PosY = refY + Variables.Z * 2 * i
+        PosX = refX + Variables.W * 2
+        ExplorerPose = {PosX, PosY, "East"}
+        PoseTable = addPose(PoseTable,ExplorerPose)
+    end
+    
+    refY = PositionY - 2 * Variables.W
+    
+    for i = 0, NumPointsSides do
+        PosY = refY - Variables.Z * 2 * i
+        PosX = refX + Variables.W
+        ExplorerPose = {PosX, PosY, "East"}
+        PoseTable = addPose(PoseTable,ExplorerPose)
+    end
+    
+    refX = PositionX
+    refY = PositionY
+    
+    for i = 0, (NumPointsSides + 1) do
+        PosY = refY + Variables.Z * 2 * i
+        PosX = refX - Variables.W
+        ExplorerPose = {PosX, PosY, "West"}
+        PoseTable = addPose(PoseTable,ExplorerPose)
+    end
+    
+    refY = PositionY - Variables.W
+    
+    for i = 0, NumPointsSides do
+        PosY = refY - Variables.Z * 2 * i
+        PosX = refX - Variables.W * 2
+        ExplorerPose = {PosX, PosY, "West"}
+        PoseTable = addPose(PoseTable,ExplorerPose)
+    end
+    
+    refY = PositionY + Variables.W
+    
+    for i = 0, NumPointsSides do
+        PosY = refY + Variables.Z * 2 * i
+        PosX = refX - Variables.W * 2
+        ExplorerPose = {PosX, PosY, "West"}
+        PoseTable = addPose(PoseTable,ExplorerPose)
+    end
+    
+    refY = PositionY - 2 * Variables.W
+    
+    for i = 0, NumPointsSides do
+        PosY = refY - Variables.Z * 2 * i
+        PosX = refX - Variables.W
+        ExplorerPose = {PosX, PosY, "West"}
+        PoseTable = addPose(PoseTable,ExplorerPose)
+    end
 
+    return PoseTable
+end
+
+function addPose(PoseTable,pose)
+    
+    if pose[1] > ENV_WIDTH then
+        pose[1] = pose[1] - ENV_WIDTH
+    end
+    
+    if pose[1] < 0 then
+        pose[1] = ENV_WIDTH + pose[1]
+    end
+    
+    if pose[2] > ENV_HEIGHT then
+        pose[2] = pose[2] - ENV_HEIGHT
+    end
+    
+    if pose[2] < 0 then
+        pose[2] = ENV_HEIGHT + pose[2]
+    end
+    
+    table.insert(PoseTable, pose)
+
+    return PoseTable  
+end
 
 return Utilities
