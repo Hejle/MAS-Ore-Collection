@@ -69,7 +69,13 @@ end
 
 function InitRobots()
     -- Broadcast the necessary informations for the Agents belonging to this base
-    Event.emit{speed = 343, description = "init", table = {group = ID, BasePosition = BasePos, BaseExit=BaseExitPos, BaseEntrance=BaseEntrancePos}, groupID = ID}
+    local initTable = {}
+    initTable["group"] = ID
+    initTable["BasePosition"] = BasePos
+    initTable["BaseExit"] = BaseExitPos
+    initTable["BaseEntrance"] = BaseEntrancePos
+    say(Inspect.inspect(initTable))
+    Event.emit{speed = 343, description = "init", table = initTable, groupID = ID}
 end
 
 function CleanUp()

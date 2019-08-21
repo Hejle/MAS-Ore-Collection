@@ -32,6 +32,8 @@ MyState = State.Base
 function InitializeAgent()
     SharedPosition.StoreInformation(ID, {PositionX, PositionY})
     CurrentPosition = {PositionX, PositionY}
+    MyState = State.Exploring
+    DeployOrientation = "North"
 end
 
 function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
@@ -140,7 +142,7 @@ function UpdateEnergy()
     if MyState == State.Deploying or MyState == State.ReturningMemoryFull or MyState == State.ReturningBatteryLow then
         StateEnergyCost = Variables.Q
     elseif MyState == State.Exploring then
-        StateEnergyCost = Variables.Q - Variables.O
+        StateEnergyCost = Variables.Q + Variables.O
     elseif MyState == State.Base then
         if UsedEnergy > 0 then
             StateEnergyCost = -1

@@ -23,7 +23,7 @@ function Utilities.Tablelength(T)
 end
 
 function Utilities.GetEnergyNeeded(point, from)
-    local distance = Utilities.distance(point, from, 2, "energy")
+    local distance = Utilities.distance(point, from, 2)
     local energy = distance * Variables.Q
     return energy
 end
@@ -33,7 +33,7 @@ function Utilities.GetValueWithSortestDistance(list, point)
     local newDist
     local result = nil
     for i=1, #list do
-        newDist = Utilities.distance(list[i], point, 1, "GetValueWithSortestDistance")
+        newDist = Utilities.distance(list[i], point, 1)
         if newDist < shortesDist then
             shortesDist = newDist
             result = {list[i], i, shortesDist}
@@ -44,13 +44,12 @@ end
 
 function Utilities.SortUsingDistance(list, point)
     table.sort(list, function(a, b)
-        return Utilities.distance(point, a, 0, "sort") < Utilities.distance(point, b, 0, "sort")
+        return Utilities.distance(point, a, 0) < Utilities.distance(point, b, 0)
     end)
 end
 
-function Utilities.distance(pointFrom, pointTo, delta, debug)
+function Utilities.distance(pointFrom, pointTo, delta)
     delta = delta or 0
-    say(debug)
     local x1 = pointFrom[1]
     local y1 = pointFrom[2]
     local x2 = pointTo[1]
