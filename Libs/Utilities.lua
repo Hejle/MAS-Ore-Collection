@@ -239,56 +239,91 @@ function Utilities.moveTorus(targetPos, ignoreCollisionPos)
 
 end
 
+function Utilities.PaintBase()
+    Map.quantumModify(PositionX+2, PositionY, Constants.background_color, Constants.base_color)  
+    Map.quantumModify(PositionX+2, PositionY+1, Constants.background_color, Constants.base_color) 
+    Map.quantumModify(PositionX+2, PositionY+2, Constants.background_color, Constants.base_color) 
+    Map.quantumModify(PositionX+2, PositionY-1, Constants.background_color, Constants.base_color) 
+    Map.quantumModify(PositionX+2, PositionY-2, Constants.background_color, Constants.base_color) 
+    Map.quantumModify(PositionX+2, PositionY-3, Constants.background_color, Constants.base_color)  
+    Map.quantumModify(PositionX-3, PositionY, Constants.background_color, Constants.base_color)  
+    Map.quantumModify(PositionX-3, PositionY+1, Constants.background_color, Constants.base_color) 
+    Map.quantumModify(PositionX-3, PositionY+2, Constants.background_color, Constants.base_color) 
+    Map.quantumModify(PositionX-3, PositionY-1, Constants.background_color, Constants.base_color) 
+    Map.quantumModify(PositionX-3, PositionY-2, Constants.background_color, Constants.base_color) 
+    Map.quantumModify(PositionX-3, PositionY-3, Constants.background_color, Constants.base_color) 
+    Map.quantumModify(PositionX-2, PositionY-3, Constants.background_color, Constants.base_color) 
+    Map.quantumModify(PositionX-1, PositionY-3, Constants.background_color, Constants.base_color) 
+    Map.quantumModify(PositionX, PositionY-3, Constants.background_color, Constants.base_color) 
+    Map.quantumModify(PositionX+1, PositionY-3, Constants.background_color, Constants.base_color) 
+    Map.quantumModify(PositionX-2, PositionY+2, Constants.background_color, Constants.base_color) 
+    Map.quantumModify(PositionX-1, PositionY+2, Constants.background_color, Constants.base_color) 
+    Map.quantumModify(PositionX, PositionY+2, Constants.background_color, Constants.base_color) 
+    Map.quantumModify(PositionX+1, PositionY+2, Constants.background_color, Constants.base_color) 
+end
 
 function Utilities.SampleNewDeployPosiiton(PoseTable, Range, SampleCounter)
     
     Sample = {}
     NumPointsTops = Variables.J
     NumPointsSides = Variables.K
+
+    resolution = 8
     
-    CycleNum = math.floor(SampleCounter / 4)
-    CycleIt = (SampleCounter - CycleNum * 4) + 1
-    
-    
-    Range = Range * (1 + CycleNum)
-    
+    CycleNum = math.floor(SampleCounter / resolution)
+    CycleIt = (SampleCounter - CycleNum * resolution) + 1
+    Range = Range * CycleNum + offset
+
     if CycleIt == 1 then
-        PosX = PositionX + NumPointsTops * Variables.W * Range
-        PosY = PositionY + NumPointsSides * Variables.Z * Range
+        PosX = PositionX + Range
+        PosY = PositionY + Range/2
     elseif CycleIt == 2 then
-        PosX = PositionX - NumPointsTops * Variables.W * Range
-        PosY = PositionY + NumPointsSides * Variables.Z * Range
+        PosX = PositionX + Range/2
+        PosY = PositionY + Range
     elseif CycleIt == 3 then
-        PosX = PositionX - NumPointsTops * Variables.W * Range
-        PosY = PositionY - NumPointsSides * Variables.Z * Range
+        PosX = PositionX - Range/2
+        PosY = PositionY + Range/1
     elseif CycleIt == 4 then
-        PosX = PositionX + NumPointsTops * Variables.W * Range
-        PosY = PositionY - NumPointsSides * Variables.Z * Range
+        PosX = PositionX - Range
+        PosY = PositionY + Range/2
+    elseif CycleIt == 5 then
+        PosX = PositionX - Range
+        PosY = PositionY - Range/2
+    elseif CycleIt == 6 then
+        PosX = PositionX - Range/2
+        PosY = PositionY - Range
+    elseif CycleIt == 7 then
+        PosX = PositionX + Range/2
+        PosY = PositionY - Range
+    elseif CycleIt == 8 then
+        PosX = PositionX + Range
+        PosY = PositionY - Range/2    
     end
-    
-    
+    Map.quantumModify(PosX, PosY, Constants.background_color, Constants.base_color) 
     NewDeployPosition = {PosX, PosY, "Random"}
     PoseTable = addPose(PoseTable, NewDeployPosition)
+
+
 
     return PoseTable
 end
 
 
 function Utilities.CorrectPosition(position)
-    if position[1] >= ENV_WIDTH then
-        position[1] = position[1] - ENV_WIDTH
+    if position[1] >= Variables.G then
+        position[1] = position[1] - Variables.G
     end
     
     if position[1] < 0 then
-        position[1] = ENV_WIDTH + position[1]
+        position[1] = Variables.G + position[1]
     end
     
-    if position[2] >= ENV_HEIGHT then
-        position[2] = position[2] - ENV_HEIGHT
+    if position[2] >= Variables.G then
+        position[2] = position[2] - Variables.G
     end
     
     if position[2] < 0 then
-        position[2] = ENV_HEIGHT + position[2]
+        position[2] = Variables.G + position[2]
     end
     return position
 end
@@ -449,23 +484,23 @@ function Utilities.GenerateDeployPositions(PoseTable)
 end
 
 function addPose(PoseTable, pose)
-    
-    if pose[1] > ENV_WIDTH then
-        pose[1] = pose[1] - ENV_WIDTH
+
+    if pose[1] > Variables.G then
+        pose[1] = pose[1] - Variables.G
     end
     
     if pose[1] < 0 then
-        pose[1] = ENV_WIDTH + pose[1]
+        pose[1] = Variables.G + pose[1]
     end
     
-    if pose[2] > ENV_HEIGHT then
-        pose[2] = pose[2] - ENV_HEIGHT
+    if pose[2] > Variables.G then
+        pose[2] = pose[2] - Variables.G
     end
     
     if pose[2] < 0 then
-        pose[2] = ENV_HEIGHT + pose[2]
+        pose[2] = Variables.G + pose[2]
     end
-    
+
     table.insert(PoseTable, pose)
     
     return PoseTable

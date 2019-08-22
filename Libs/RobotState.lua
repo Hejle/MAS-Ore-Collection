@@ -6,6 +6,7 @@ RobotState.Deploying = "Deploying"
 RobotState.Exploring = "Exploring"
 RobotState.ReturningMemoryFull = "ReturningMemoryFull"
 RobotState.ReturningBatteryLow = "ReturningBatteryLow"
+RobotState.ReturningLoopComplete = "ReturningLoopComplete"
 RobotState.Error = "Error"
 RobotState.Dead = "Dead"
 RobotState.ExitBase = "ExitBase"
@@ -19,5 +20,4 @@ RobotState.NoOrders = "NoOrders"
 RobotState.Entering = "Entering"
 RobotState.GatherMinerals = "GatherMinerals"
 RobotState.BackpackFull = "BackpackFull"
-
 return RobotState
