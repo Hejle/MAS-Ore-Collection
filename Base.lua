@@ -28,9 +28,7 @@ function InitializeAgent()
     SharedPosition.StoreInformation(ID, BasePos)
     Agent.changeColor{id=ID, r=128,g=0,b=128}
     DeployPositionsList = Utilities.GenerateDeployPositions(DeployPositionsList)
-    KnownOres = {{2,4}, {25,4}, {15,4}, {1,4}, {10,4}}
     SampleCounter = 0
-    --say("list is: " .. Inspect.inspect(SendOre(20000)))
 end
 
 function TakeStep()
@@ -41,45 +39,50 @@ function TakeStep()
         local id, value = next(WaitingTransporters)
         local list = SendOre(value[1], value[2], id)
         if Utilities.IsNotEmpty(list) then
-            Event.emit{speed = 343, description = Events.RetrieveOrders, table = list, targetID = id}
+            Event.emit{speed = 343, description = Events.RetrieveOrders, table = {target=id, data=list}}
             WaitingTransporters[id] = nil
         end
     end
     Counter = Counter + 1
 end
 
-function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
-    if eventDescription == "deployPositionRequested" and ID ~= sourceID then
+function HandleEvent(event)
+    local sourceX = event.X
+    local sourceY = event.Y
+    local sourceID = event.ID
+    local eventDescription = event.description
+    local eventTable = event.table
+    if eventDescription == "deployPositionRequested" and ID == eventTable["target"] then
         --l_print("Base: " .. ID .. " , Explorer: " .. sourceID .. " has requested a deploy position.")
         ExplorerPose = table.remove(DeployPositionsList, 1)
         if ExplorerPose ~= nil then
-            Event.emit{speed = 343, description = "servingDeployPosition", table = {position = {ExplorerPose[1], ExplorerPose[2]}, orientation = ExplorerPose[3]}, targetID = sourceID}
+            Event.emit{speed = 343, description = "servingDeployPosition", table = {target=sourceID, position = {ExplorerPose[1], ExplorerPose[2]}, orientation = ExplorerPose[3]}}
         else
-            Event.emit{speed = 343, description = "servingDeployPosition", table = {position = BasePos, orientation = "nil"}, targetID = sourceID}
+            Event.emit{speed = 343, description = "servingDeployPosition", table = {target=sourceID, position = BasePos, orientation = "nil"}}
         end
-    elseif eventDescription == "updateDeployPositionsList" and ID ~= sourceID then
-
-        newDeployPosition = {eventTable[1],eventTable[2]}
+    elseif eventDescription == "updateDeployPositionsList" and ID == eventTable["target"] then
+        newDeployPosition = {eventTable["data"][1],eventTable["data"][2]}
         DistanceToDeploy = Utilities.distance(newDeployPosition,BasePos)
 
         if eventTable[3] == "nil" then 
-            say("Explorer " .. sourceID .. " didn't find any ore. Sampling new deploy position")
         elseif DistanceToDeploy > Variables.G/2 then
-            say("Explorer " .. sourceID .. " reached max distance " ..DistanceToDeploy .. " . Sampling new deploy position")
             Utilities.SampleNewDeployPosiiton(DeployPositionsList,Variables.W,SampleCounter)
             SampleCounter = SampleCounter +1 
         else
-                    table.insert(DeployPositionsList, eventTable)
+            table.insert(DeployPositionsList, eventTable)
         end
-    elseif eventDescription == "updateOreList" and ID ~= sourceID then
-        --say("Update OreList: " .. sourceID)
-        StoreOre(eventTable)
-    elseif eventDescription == Events.RequestOrders then
+    elseif eventDescription == "updateOreList" and ID == eventTable["target"] then
+        if StoreOre(eventTable["data"]) then
+            Event.emit{speed = 0, description = "explorer_mem_clear", table = {target=sourceID}}
+        else
+            --Do something if theres not space for ores
+        end
+    elseif eventDescription == Events.RequestOrders and ID == eventTable["target"] then
         table.insert(WaitingTransporters, eventTable["transporterID"],{eventTable["energy"], eventTable["backPack"]})
-    elseif eventDescription == Events.ReturningMinerals then
+    elseif eventDescription == Events.ReturningMinerals and ID == eventTable["target"] then
         HandleReturningMinerals(eventTable["transporterID"], eventTable["minerals"], eventTable["memo"])
-    elseif eventDescription == "baseAccesRequest" and ID  ~= sourceID then
-        Event.emit{speed = 0, description = "baseAccesGranted", targetID = sourceID}
+    elseif eventDescription == "baseAccesRequest" and ID == eventTable["target"] then
+        Event.emit{speed = 0, description = "baseAccesGranted", table = {target=sourceID}}
     end
 
 end
@@ -91,34 +94,35 @@ function InitRobots()
     initTable["BasePosition"] = BasePos
     initTable["BaseExit"] = BaseExitPos
     initTable["BaseEntrance"] = BaseEntrancePos
-    Event.emit{speed = 343, description = "init", table = initTable, groupID = ID}
+    Event.emit{speed = 343, description = "init", table = initTable}
 end
 
 function CleanUp()
 
 end
 
-function HandleReturningMinerals(robot, Minerals, Memory)
-    say("getting ore")
-    if Utilities.IsNotEmpty(Memory) then
-        StoreOre(Memory)
-    end
+function HandleReturningMinerals(robot, Minerals, mem)
+    --if Utilities.IsNotEmpty(mem) then
+        --StoreOre(mem)
+    --end
     local f = function(v1, v2)
         return (v1[2] == v2)
     end
     KnownOresBeingCollected = Utilities.RemoveAllValuesArrayFunction(KnownOresBeingCollected, f, robot)
-    Event.emit{speed = 343, description = Events.OreStored, table = {}, targetID = robot}
+    Event.emit{speed = 343, description = Events.OreStored, table = {target=robot}}
 end
 
 
 function StoreOre(list)
     if(#list + #KnownOresUncollected + #KnownOresBeingCollected > TotalMemory) then
-        --NoMemory
+        return false
     else
         for i=1,#list do
+            Map.quantumModify(list[i][1], list[i][2], Constants.ore_color, Constants.ore_color_found)
             table.insert(KnownOresUncollected, list[i])
         end
     end
+    return true
 end
 
 function SendOre(energy, size, robot)
@@ -143,9 +147,9 @@ function SendOresSorted(energy, comparePoint, resultList, size, robot)
         getHomeEnergy = Utilities.GetEnergyNeeded(point[1], BasePos)
         if usedEnergy + getHomeEnergy < energy then
             table.insert(resultList, point[1])
+            table.remove( KnownOresUncollected, point[2])
             table.insert(KnownOresBeingCollected, {point[1], robot})
             newPoint = point[1]
-            table.remove( KnownOresUncollected, point[2])
             addedPoint = true
         end
     end

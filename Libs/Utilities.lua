@@ -145,6 +145,12 @@ function Utilities.ListContainsPoint(list, point)
 end
 
 function Utilities.moveTorus(targetPos, ignoreCollisionPos)
+    
+    if(targetPos[1] == nil or targetPos[2] == nil) then
+        say("im dead: " .. Inspect.inspect(targetPos))
+        say("im dead: " .. Inspect.inspect(ignoreCollisionPos))
+        return
+    end
     ignoreCollisionPos = ignoreCollisionPos or {Variables.G + 2, Variables.G + 2}
     local destX = targetPos[1]
     local destY = targetPos[2]

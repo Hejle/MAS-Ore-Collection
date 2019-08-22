@@ -41,8 +41,13 @@ function InitializeAgent()
       Agent.changeColor{id=ID, r=0,g=0,b=255}
 end
 
-function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
-      if eventDescription == "init" and ID ~= sourceID then
+function HandleEvent(event)
+      local sourceX = event.X
+      local sourceY = event.Y
+      local sourceID = event.ID
+      local eventDescription = event.description
+      local eventTable = event.table
+      if eventDescription == "init" and Group_ID == 0 then
             if (eventTable ~= nil) then
                 Group_ID = eventTable["group"]
                 BasePosition = eventTable["BasePosition"]
@@ -53,13 +58,11 @@ function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
                 l_print("ERROR: eventable empty.")
             end
         
-      elseif eventDescription == Events.RetrieveOrders then
-            say("Getting Orders")
-            Transporter.AddInfoListToMemory(eventTable)
+      elseif eventDescription == Events.RetrieveOrders and eventTable["target"] == ID then
+            Transporter.AddInfoListToMemory(eventTable["data"])
             MyState = State.ExitBase
             TimeOut = 0
-      elseif eventDescription == Events.OreStored then
-            say("Minerals have been sent")
+      elseif eventDescription == Events.OreStored and eventTable["target"] == ID then
             Backpack = 0
             Memory = {}
             TimeOut = 0
@@ -76,8 +79,7 @@ function TakeStep()
             if UsedEnergy == 0 and Backpack == 0 then
                   if TimeOut == 0 then
                         if Transporter.UpdateEnergy(Variables.R) then
-                              Event.emit{speed = 343, description = Events.RequestOrders, table = {transporterID = ID, energy=TotalEnergy, backPack=BackpackSize}, targetID = Group_ID}
-                              say("Requested")
+                              Event.emit{speed = 343, description = Events.RequestOrders, table = {target=Group_ID, transporterID = ID, energy=TotalEnergy, backPack=BackpackSize}}
                               TimeOut = 1000
                         end
                   end
@@ -87,8 +89,7 @@ function TakeStep()
             if Backpack > 0 then
                   if TimeOut == 0 then
                         if Transporter.UpdateEnergy(Variables.R) then
-                              Event.emit{speed = 343, description = Events.ReturningMinerals, table = {transporterID = ID, minerals=Backpack, memo=Memory}, targetID = Group_ID}
-                              say("Sending Ore")
+                              Event.emit{speed = 343, description = Events.ReturningMinerals, table = {target=Group_ID, transporterID = ID, minerals=Backpack, memo=Memory}}
                               TimeOut = 1000
                         end
                   end

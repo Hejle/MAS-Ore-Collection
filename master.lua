@@ -25,11 +25,11 @@ function InitializeAgent()
 	for k,v in pairs(Bases) do
 		for i=1,Variables.X do
 			local info = SharedPosition.GetInformation(v)
-			Agent.addAgent("Explorer.lua", info[1], info[2], v)
+			Agent.addAgent("Explorer.lua", info[1], info[2])
 		end
 		for i=1,Variables.Y do
 			local info = SharedPosition.GetInformation(v)
-			Agent.addAgent("Transporter.lua", info[1], info[2], v)
+			Agent.addAgent("Transporter.lua", info[1], info[2])
 		end
 	end
 

@@ -26,7 +26,8 @@ TotalEnergy = Variables.E
 UsedEnergy = 0
 UsedMemory = 0
 Memory = {}
-MyState = State.Base
+MyState = State.NotInit
+ExTimeOut = 0
 
 
 function InitializeAgent()
@@ -34,32 +35,39 @@ function InitializeAgent()
     CurrentPosition = {PositionX, PositionY}
 end
 
-function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
-    
-    if eventDescription == "init" and ID ~= sourceID then
+function HandleEvent(event)
+    local sourceX = event.X
+    local sourceY = event.Y
+    local sourceID = event.ID
+    local eventDescription = event.description
+    local eventTable = event.table
+    if eventDescription == "init" and Group_ID == 0 then
         if (eventTable ~= nil) then
             Group_ID = eventTable["group"]
             BasePosition = eventTable["BasePosition"]
-            BaseEntrancePosition = {BasePosition[1], BasePosition[2] - 1}
-            BaseExitPosition = {BasePosition[1], BasePosition[2] + 1}
+            BaseEntrancePosition = eventTable["BaseEntrance"]
+            BaseExitPosition = eventTable["BaseExit"]
+            MyState = State.Base
         --l_print("Explorer: " .. ID .. " has Group_ID: " .. Group_ID)
         else
             l_print("ERROR: eventable empty.")
         end
     
-    elseif eventDescription == "servingDeployPosition" and ID ~= sourceID then
+    elseif eventDescription == "servingDeployPosition" and eventTable["target"] == ID then
         --l_print("Explorer: " .. ID .. " has recieved a deploy position, from Base: " .. sourceID .. " , " .. Inspect.inspect(eventTable))
         DeployPosition = eventTable["position"]
         DeployOrientation = eventTable["orientation"]
         MyState = State.ExitBase
-    elseif eventDescription == "baseAccesGranted" and ID ~= sourceID then
+    elseif eventDescription == "baseAccesGranted" and eventTable["target"] == ID then
         MyState = State.PermissionToLand
+    elseif eventDescription == "explorer_mem_clear" and eventTable["target"] == ID then
+        ClearMemory()
     end
 
+    
 end
 
 function TakeStep()
-    
     if MyState == State.Deploying then
         if Utilities.comparePoints(CurrentPosition, DeployPosition) then
             MyState = State.Exploring
@@ -77,7 +85,7 @@ function TakeStep()
     
     elseif MyState == State.ReturningMemoryFull or MyState == State.ReturningBatteryLow then
         if Utilities.distance(CurrentPosition, BasePosition) <= Variables.I then
-            Event.emit{speed = 0, description = "baseAccesRequest", targetID = Group_ID}
+            Event.emit{speed = 0, description = "baseAccesRequest", table = {target=Group_ID}}
             MyState = State.WaitingToLand
         else
             Utilities.moveTorus(BaseEntrancePosition)
@@ -86,13 +94,12 @@ function TakeStep()
         if Utilities.comparePoints(CurrentPosition, BaseEntrancePosition) then
             if Utilities.IsNotEmpty(Memory) then
                 MyState = State.EnterBase
-                Event.emit{speed = 343, description = "updateOreList", table = Memory, targetID = Group_ID}
-                Event.emit{speed = 343, description = "updateDeployPositionsList", table = LastPosition, targetID = Group_ID}
-                ClearMemory()
+                SendMemoryToBase()
+                Event.emit{speed = 343, description = "updateDeployPositionsList", table = {target = Group_ID, data=LastPosition}}
             else
                 MyState = State.EnterBase
                 LastPosition[3] = "nil"
-                Event.emit{speed = 343, description = "updateDeployPositionsList", table = LastPosition, targetID = Group_ID}
+                Event.emit{speed = 343, description = "updateDeployPositionsList", table = {target = Group_ID, data=LastPosition}}
             end
         else
             Utilities.moveTorus(BaseEntrancePosition,BasePosition)
@@ -104,8 +111,10 @@ function TakeStep()
             Utilities.moveTorus(BasePosition,BasePosition)
         end
     elseif MyState == State.Base then
-        if UsedEnergy == 0 then
-            Event.emit{speed = 343, description = "deployPositionRequested", targetID = Group_ID}
+        if #Memory > 0 then
+            SendMemoryToBase()
+        elseif UsedEnergy == 0 then
+            Event.emit{speed = 343, description = "deployPositionRequested", table = {target = Group_ID}}
             MyState = State.WaitForOrders
         else
             -- stay in the base until the battery has been charged
@@ -125,6 +134,14 @@ function TakeStep()
     UpdateEnergy()
     CurrentPosition = {PositionX, PositionY}
 
+end
+
+function SendMemoryToBase()
+    if ExTimeOut == 0 then
+        Event.emit{speed = 343, description = "updateOreList", table = {target = Group_ID, data=Memory}}
+        ExTimeOut = 200
+    end
+    ExTimeOut = ExTimeOut - 1
 end
 
 function CheckEnergyStatus()
@@ -160,8 +177,9 @@ function Search()
     
     if table ~= nil then
         for i = 1, #table do
-            Map.quantumModify(table[i].posX, table[i].posY, Constants.ore_color, Constants.ore_color_found)
-            AddInfoToMemory({table[i].posX, table[i].posY})
+            if AddInfoToMemory({table[i].posX, table[i].posY}) then
+                --Map.quantumModify(table[i].posX, table[i].posY, Constants.ore_color, Constants.ore_color_found)
+            end
         end
     end
 end
@@ -194,7 +212,6 @@ function getNextStep(orientation)
         position = {PositionX - 1, PositionY}
     
     elseif orientation == "Random" then
-        say("Moving to random")
     end
      
     position = Utilities.CorrectPosition(position)
