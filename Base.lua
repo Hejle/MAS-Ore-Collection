@@ -28,6 +28,7 @@ function InitializeAgent()
     Agent.changeColor{id=ID, r=128,g=0,b=128}
     DeployPositionsList = Utilities.GenerateDeployPositions(DeployPositionsList)
     KnownOres = {{2,4}, {25,4}, {15,4}, {1,4}, {10,4}}
+    SampleCounter = 0
     --say("list is: " .. Inspect.inspect(SendOre(20000)))
 end
 
@@ -54,9 +55,21 @@ function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
             Event.emit{speed = 343, description = "servingDeployPosition", table = {position = BasePos, orientation = "nil"}, targetID = sourceID}
         end
     elseif eventDescription == "updateDeployPositionsList" and ID ~= sourceID then
-        table.insert(DeployPositionsList, eventTable)
+
+        newDeployPosition = {eventTable[1],eventTable[2]}
+        DistanceToDeploy = Utilities.distance(newDeployPosition,BasePos)
+
+        if eventTable[3] == "nil" then 
+            say("Explorer " .. sourceID .. " didn't find any ore. Sampling new deploy position")
+        elseif DistanceToDeploy > Variables.G/2 then
+            say("Explorer " .. sourceID .. " reached max distance " ..DistanceToDeploy .. " . Sampling new deploy position")
+            Utilities.SampleNewDeployPosiiton(DeployPositionsList,Variables.W,SampleCounter)
+            SampleCounter = SampleCounter +1 
+        else
+                    table.insert(DeployPositionsList, eventTable)
+        end
     elseif eventDescription == "updateOreList" and ID ~= sourceID then
-        say("Update OreList: " .. sourceID)
+        --say("Update OreList: " .. sourceID)
         StoreOre(eventTable)
     elseif eventDescription == Events.RequestOrders then
         table.insert(WaitingTransporters, eventTable["transporterID"],{eventTable["energy"], eventTable["backPack"]})
@@ -122,3 +135,4 @@ function SendOresSorted(energy, comparePoint, resultList, size)
         return resultList
     end
 end
+
