@@ -301,7 +301,11 @@ function Utilities.SampleNewDeployPosiiton(PoseTable, Range, SampleCounter)
     end
     Map.quantumModify(PosX, PosY, Constants.background_color, Constants.base_color) 
     NewDeployPosition = {PosX, PosY, Constants.RandomDir}
-    PoseTable = addPose(PoseTable, NewDeployPosition)
+    
+
+    if (Utilities.GetEnergyNeeded(NewDeployPosition,{PositionX,PositionY})*2 < Variables.E) then
+        PoseTable = addPose(PoseTable, NewDeployPosition)
+    end
 
     return PoseTable
 end
