@@ -68,19 +68,22 @@ function TakeStep()
             Utilities.moveTorus(DeployPosition)
         end
         CheckEnergyStatus()
-        
+    
     elseif MyState == State.Exploring then
         -- Remeber to set the distance between steps properly, right now is only 1 pixel at a time
-        NextPosition = getNextStep(DeployOrientation)
+        NextPosition = GetNextStep(DeployOrientation, 1)
         Utilities.moveTorus(NextPosition)
-        if DeployOrientation == "Random" then
-            DeployOrientation = Search()
-        else
-            Search()
-        end
+        
+            if DeployOrientation == Constants.R then
+                DeployOrientation = Search()
+            else
+                Search()
+            end
+
         CheckEnergyStatus()
         CheckMemoryStatus()
-        if Utilities.comparePoints(DeployOrientation,CurrentPosition) then
+
+        if Utilities.comparePoints(DeployOrientation, CurrentPosition) then
             MyState = State.ReturningLoopComplete
         end
     
@@ -139,16 +142,17 @@ end
 function CheckEnergyStatus()
     if UsedEnergy >= TotalEnergy then
         MyState = State.ReturningBatteryLow
-        LastPosition = {PositionX, PositionY, DeployOrientation}
+        LastPosition = GetNextStep(DeployOrientation,Variables.P)
     end
 end
 
 function CheckMemoryStatus()
     if UsedMemory >= TotalMemory then
         MyState = State.ReturningMemoryFull
-        LastPosition = {PositionX, PositionY, DeployOrientation}
+        LastPosition = GetNextStep(DeployOrientation,Variables.P)
     end
 end
+
 
 function UpdateEnergy()
     StateEnergyCost = 0
@@ -194,7 +198,7 @@ function Search()
             end
         end
     end
-
+    
     table = Map.radialMapColorScan(Variables.P, Constants.ore_color_found[1], Constants.ore_color_found[2], Constants.ore_color_found[3])
     if table ~= nil then
         for i = 1, #table do
@@ -227,7 +231,7 @@ function Search()
     local maxVotes = math.max(VotesForDirections[1], VotesForDirections[2], VotesForDirections[3], VotesForDirections[4])
     local selectedQuadrant = 0
     if maxVotes == 0 then
-        selectedQuadrant = Stat.randomInteger(1, 4)
+        selectedQuadrant = math.random(4)
     else
         for i = 1, #VotesForDirections do
             if VotesForDirections[i] == maxVotes then
@@ -255,25 +259,25 @@ function CleanUp()
 
 end
 
-function getNextStep(orientation)
+function GetNextStep(orientation, stepsize)
     
     position = {0, 0}
     if orientation == Constants.North then
-        position = {PositionX, PositionY + 1}
+        position = {PositionX, PositionY + stepsize}
     elseif orientation == Constants.South then
-        position = {PositionX, PositionY - 1}
+        position = {PositionX, PositionY - stepsize}
     elseif orientation == Constants.East then
-        position = {PositionX + 1, PositionY}
+        position = {PositionX + stepsize, PositionY}
     elseif orientation == Constants.West then
-        position = {PositionX - 1, PositionY}
+        position = {PositionX - stepsize, PositionY}
     elseif orientation == Constants.NorthEast then
-        position = {PositionX + 1, PositionY + 1}
+        position = {PositionX + stepsize, PositionY + stepsize}
     elseif orientation == Constants.NorthWest then
-        position = {PositionX - 1, PositionY + 1}
+        position = {PositionX - stepsize, PositionY + stepsize}
     elseif orientation == Constants.SouthWest then
-        position = {PositionX - 1, PositionY - 1}
+        position = {PositionX - stepsize, PositionY - stepsize}
     elseif orientation == Constants.SouthEast then
-        position = {PositionX + 1, PositionY - 1}
+        position = {PositionX + stepsize, PositionY - stepsize}
     end
     
     position = Utilities.CorrectPosition(position)
