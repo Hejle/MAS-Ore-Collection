@@ -66,12 +66,15 @@ function HandleEvent(event)
             Backpack = 0
             Memory = {}
             TimeOut = 0
+      elseif eventDescription == Events.baseAccesGranted and eventTable["target"] == ID then
+            MyState = State.PermissionToLand
       end
 end
 
 function TakeStep()
       local CurrentPosition = {PositionX, PositionY}
       local EnergyToGetHome = 0
+
       if not #BasePosition == 2 then
             EnergyToGetHome = Utilities.GetEnergyNeeded(CurrentPosition, BasePosition)
       end
@@ -98,7 +101,12 @@ function TakeStep()
             Transporter.UpdateEnergy(-Variables.Q) --Recharging
       end
 
-      if not ((MyState == State.NotInit) or (MyState == State.Base) or (MyState == State.Returning)) then
+      if not ((MyState == State.NotInit)
+      or (MyState == State.Base)
+      or (MyState == State.WaitingToLand)
+      or (MyState == State.Entering)
+      or (MyState == State.PermissionToLand)
+      or (MyState == State.Returning)) then
             if (EnergyToGetHome + 15*Variables.Q > TotalEnergy - UsedEnergy) then
                   if  EnergyToGetHome > TotalEnergy - UsedEnergy then
                         MyState = State.GoingToDie
@@ -110,6 +118,8 @@ function TakeStep()
       if MyState == State.BackpackFull and
       not ((MyState == State.Returning)
       or (MyState == State.Entering)
+      or (MyState == State.WaitingToLand)
+      or (MyState == State.PermissionToLand)
       or (MyState == State.NotInit)
       or (MyState == State.Base)) then
             --Could work as transmitter or go home, or go somewhere else
@@ -118,6 +128,8 @@ function TakeStep()
 
       if (not ((MyState == State.NotInit)
       or (MyState == State.Base)
+      or (MyState == State.WaitingToLand)
+      or (MyState == State.PermissionToLand)
       or (MyState == State.Entering)
       or (MyState == State.Returning))and #Memory <=0) then
             MyState = State.NoOrders
@@ -139,6 +151,16 @@ function TakeStep()
       end
 
       if MyState == State.Returning then
+            if Utilities.distance(CurrentPosition, BaseEntrancePos) <= Variables.I then
+                  Event.emit{speed = 0, description = Events.baseAccesRequest, table = {target=Group_ID}}
+                  MyState = State.WaitingToLand
+            else
+                  if Transporter.UpdateEnergy(Variables.Q) then
+                        Utilities.moveTorus(BaseEntrancePos)
+                  end
+            end
+      end
+      if MyState == State.PermissionToLand then
             if Utilities.comparePoints(CurrentPosition, BaseEntrancePos) then
                   MyState = State.Entering
             else
@@ -204,7 +226,6 @@ function Transporter.GetTarget(pos)
 end
 
 function Transporter.Mine(pos)
-      say("MINING")
       Map.quantumModify(pos[1], pos[2], Constants.ore_color_found, {r=255, 255, 255})
       Backpack = Backpack + 1
 end

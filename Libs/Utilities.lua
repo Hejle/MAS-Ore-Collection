@@ -101,6 +101,7 @@ function Utilities.GetValueWithSortestDistance(list, point)
 end
 
 function Utilities.SortUsingDistance(list, point)
+    
     if #list > 1 then
         table.sort(list, function(a, b)
             return Utilities.distance(point, a, 0) < Utilities.distance(point, b, 0)
@@ -109,6 +110,9 @@ function Utilities.SortUsingDistance(list, point)
 end
 
 function Utilities.distance(pointFrom, pointTo, delta)
+    if(pointFrom == nil or pointTo == nil) then
+        return nil
+    end
     delta = delta or 0
     local x1 = pointFrom[1]
     local y1 = pointFrom[2]
@@ -372,7 +376,6 @@ function Utilities.SampleNewDeployPosiiton(PoseTable, Range, SampleCounter)
         PosX = PositionX + Range
         PosY = PositionY - Range/2    
     end
-    Map.quantumModify(PosX, PosY, Constants.background_color, Constants.base_color) 
     NewDeployPosition = {PosX, PosY, Constants.RandomDir}
     
 

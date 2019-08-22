@@ -12,13 +12,13 @@ Utilities = require "Libs.Utilities"
 Counter = 0
 DeployPositionsList = {}
 KnownOresUncollected = {}
-KnownOresBeingCollected = {}
 ExplorerPose = {}
 BasePos = {}
 BaseExitPos = {}
 BaseEntrancePos = {}
 WaitingTransporters = {}
-TotalMemory = Variables.S
+TotalMemory = 1000000000--Variables.S
+LandingList = {}
 
 
 function InitializeAgent()
@@ -27,7 +27,7 @@ function InitializeAgent()
     BaseEntrancePos = {BasePos[1], BasePos[2] - 1}
     SharedPosition.StoreInformation(ID, BasePos)
     Agent.changeColor{id = ID, r = 128, g = 0, b = 128}
-    Utilities.PaintBase()
+    --Utilities.PaintBase()
     DeployPositionsList = Utilities.GenerateDeployPositions(DeployPositionsList)
     SampleCounter = 0
 end
@@ -38,6 +38,12 @@ function TakeStep()
     if Counter == 0 then
         InitRobots()
     end
+    if Utilities.IsNotEmpty(LandingList) then
+        local k, v = next(LandingList)
+        Event.emit{speed = 0, description = Events.baseAccesGranted, table = {target=k}}
+        LandingList[k] = nil
+    end
+
     if Utilities.IsNotEmpty(WaitingTransporters) then
         local id, value = next(WaitingTransporters)
         if Utilities.IsNotEmpty(KnownOresUncollected) then
@@ -57,6 +63,9 @@ function HandleEvent(event)
     local sourceID = event.ID
     local eventDescription = event.description
     local eventTable = event.table
+    if(Utilities.distance({sourceX, sourceY}, {PositionX, PositionY}) > Variables.I) then
+        return
+    end
     if eventDescription == Events.deployPositionRequested and ID == eventTable["target"] then
         --l_print("Base: " .. ID .. " , Explorer: " .. sourceID .. " has requested a deploy position.")
         ExplorerPose = table.remove(DeployPositionsList, 1)
@@ -88,6 +97,7 @@ function HandleEvent(event)
         HandleReturningMinerals(eventTable["transporterID"], eventTable["minerals"], eventTable["memo"])
     elseif eventDescription == Events.baseAccesRequest and ID == eventTable["target"] then
         Event.emit{speed = 0, description = Events.baseAccesGranted, table = {target=sourceID}}
+        --table.insert(LandingList, sourceID, sourceID)
     end
 end
 
@@ -112,23 +122,31 @@ function HandleReturningMinerals(robot, Minerals, mem)
     local f = function(v1, v2)
         return (v1[2] == v2)
     end
-    KnownOresBeingCollected = Utilities.RemoveAllValuesArrayFunction(KnownOresBeingCollected, f, robot)
     Event.emit{speed = 343, description = Events.OreStored, table = {target=robot}}
 end
 
 
 function StoreOre(list)
-    if(#list + #KnownOresUncollected + #KnownOresBeingCollected > TotalMemory) then
-        return false
-    else
-        for i=1,#list do
-            if Utilities.IsPoint(list[i]) then
-                --say(Inspect.inspect(list[i]))
-                Map.quantumModify(list[i][1], list[i][2], Constants.ore_color, Constants.ore_color_found)
-                table.insert(KnownOresUncollected, list[i])
-            end
+    for i=1,#list do
+        if Utilities.IsPoint(list[i]) then
+            Map.quantumModify(list[i][1], list[i][2], Constants.ore_color, Constants.ore_color_found)
+            table.insert(KnownOresUncollected, list[i])
         end
     end
+    --if (#list + #KnownOresUncollected > TotalMemory) then
+    --    if #list < #KnownOresUncollected then
+    --        return false
+    --    else
+    --        KnownOresUncollected = {}
+    --    end
+    --else
+    --    for i=1,#list do
+    --        if Utilities.IsPoint(list[i]) then
+    --            Map.quantumModify(list[i][1], list[i][2], Constants.ore_color, Constants.ore_color_found)
+    --            table.insert(KnownOresUncollected, list[i])
+    --        end
+    --    end
+    --end
     return true
 end
 
@@ -155,7 +173,6 @@ function SendOresSorted(energy, comparePoint, resultList, size, robot)
         if usedEnergy + getHomeEnergy < energy then
             table.insert(resultList, point[1])
             table.remove(KnownOresUncollected, point[2])
-            table.insert(KnownOresBeingCollected, {point[1], robot})
             newPoint = point[1]
             addedPoint = true
         end

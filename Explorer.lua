@@ -73,9 +73,6 @@ function TakeStep()
         if Utilities.comparePoints(CurrentPosition, DeployPosition) then
             MyState = State.Exploring
         else
-            if DeployPosition[1] == nil then
-                say("sad")
-            end
             Utilities.moveTorus(DeployPosition)
         end
         CheckEnergyStatus()
@@ -145,8 +142,12 @@ function TakeStep()
         elseif MyState == State.WaitingToLand then
         -- Do nothing
         end
-        UpdateEnergy()
-        CurrentPosition = {PositionX, PositionY}
+
+        if not (MyState == State.NotInit) then
+            UpdateEnergy()
+            CurrentPosition = {PositionX, PositionY}
+        end
+        
 
 end
 
@@ -159,7 +160,7 @@ function SendMemoryToBase()
 end
 
 function CheckEnergyStatus()
-    if UsedEnergy >= TotalEnergy then
+    if (Utilities.GetEnergyNeeded({PositionX, PositionY}, BasePosition) + Variables.Q * 5 > TotalEnergy - UsedEnergy) then
         MyState = State.ReturningBatteryLow
         LastPosition = GetNextStep(DeployOrientation,Variables.P)
     end
@@ -185,6 +186,10 @@ function UpdateEnergy()
         end
     end
     UsedEnergy = UsedEnergy + StateEnergyCost
+    if UsedEnergy >= TotalEnergy then
+        MyState = State.Dead
+        say("I died: " .. ID)
+    end
 end
 
 function Search()

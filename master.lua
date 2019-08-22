@@ -54,7 +54,6 @@ function MapInitialization()
 		local y = Stat.randomInteger(0, ENV_HEIGHT)
 
 		if Draw.compareColor(Map.checkColor(x, y), Constants.background_color) then
-			--say("succes")
 
 			Map.modifyColor(x, y, Constants.ore_color)
 		else
