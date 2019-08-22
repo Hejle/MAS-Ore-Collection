@@ -79,18 +79,14 @@ function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
         --say("Update OreList: " .. sourceID)
         StoreOre(eventTable)
     elseif eventDescription == Events.RequestOrders then
-<<<<<<< HEAD
         table.insert(WaitingTransporters, eventTable["transporterID"], {eventTable["energy"], eventTable["backPack"]})
     --UpdateOreList()
     elseif eventDescription == Events.baseAccesRequest and ID ~= sourceID then
         Event.emit{speed = 0, description = Events.baseAccesGranted, targetID = sourceID}
-=======
-        table.insert(WaitingTransporters, eventTable["transporterID"],{eventTable["energy"], eventTable["backPack"]})
     elseif eventDescription == Events.ReturningMinerals then
         HandleReturningMinerals(eventTable["transporterID"], eventTable["minerals"], eventTable["memo"])
     elseif eventDescription == "baseAccesRequest" and ID  ~= sourceID then
         Event.emit{speed = 0, description = "baseAccesGranted", targetID = sourceID}
->>>>>>> 2a880d810b721a8908e3b90f22681053e95e52c4
     end
 
 end
@@ -123,17 +119,12 @@ end
 
 
 function StoreOre(list)
-<<<<<<< HEAD
-    for i = 1, #list do
-        table.insert(KnownOresBeingCollected, list[i])
-=======
     if(#list + #KnownOresUncollected + #KnownOresBeingCollected > TotalMemory) then
         --NoMemory
     else
         for i=1,#list do
             table.insert(KnownOresUncollected, list[i])
         end
->>>>>>> 2a880d810b721a8908e3b90f22681053e95e52c4
     end
 end
 
@@ -152,13 +143,8 @@ function SendOresSorted(energy, comparePoint, resultList, size, robot)
     if #resultList == size then
         return resultList
     end
-<<<<<<< HEAD
-    
-    local point = Utilities.GetValueWithSortestDistance(KnownOres, comparePoint)
-=======
 
     local point = Utilities.GetValueWithSortestDistance(KnownOresUncollected, comparePoint)
->>>>>>> 2a880d810b721a8908e3b90f22681053e95e52c4
     if point ~= nil then
         usedEnergy = Utilities.GetEnergyNeeded(point[1], comparePoint)
         getHomeEnergy = Utilities.GetEnergyNeeded(point[1], BasePos)
@@ -166,11 +152,7 @@ function SendOresSorted(energy, comparePoint, resultList, size, robot)
             table.insert(resultList, point[1])
             table.insert(KnownOresBeingCollected, {point[1], robot})
             newPoint = point[1]
-<<<<<<< HEAD
-            table.remove(KnownOres, point[2])
-=======
             table.remove( KnownOresUncollected, point[2])
->>>>>>> 2a880d810b721a8908e3b90f22681053e95e52c4
             addedPoint = true
         end
     end
