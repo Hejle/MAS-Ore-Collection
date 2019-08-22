@@ -8,7 +8,7 @@ variables.I = 15 -- Fixed Communication scope
 variables.J = 2 -- For the initial deploy formation, number of points on each half of the sides North/South 
 variables.K = 2 -- For the initial deploy formation, number os points on each half of the sides East/West
 variables.M = 100 -- Coordination Mode (1 = Coop, 0 = Competitive)
-variables.N = 1 -- Number of bases
+variables.N = 2-- Number of bases
 variables.O = 2 -- Cost of perception
 variables.P = 5 -- initial perception scope
 variables.Q = 2 -- Cost of a movement action

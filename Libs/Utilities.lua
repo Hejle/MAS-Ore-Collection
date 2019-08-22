@@ -40,46 +40,6 @@ function Utilities.IsNotEmpty(T)
     return true
 end
 
-function Utilities.RemoveAllValuesArray(T, Value)
-    local Result = {}
-    for i = 1, #T do
-        if(not(T[i] == Value)) then
-            table.insert(Result, T[i])
-        end
-    end
-    return Result
-end
-
-function Utilities.RemoveAllValuesDictionary(T, Value)
-    local Result = {}
-    for k,v in pairs(T) do
-        if(not(v == Value)) then
-            table.insert(Result, k,v)
-        end
-    end
-    return Result
-end
-
-function Utilities.RemoveAllValuesArrayFunction(T, F, value)
-    local Result = {}
-    for i = 1, #T do
-        if (not (F(T[i], value))) then
-            table.insert(Result, T[i])
-        end
-    end
-    return Result
-end
-
-function Utilities.RemoveAllValuesDictionaryFunction(T, F, value)
-    local Result = {}
-    for k,v in pairs(T) do
-        if(not (F(T[v], value))) then
-            table.insert(Result, k,v)
-        end
-    end
-    return Result
-end
-
 function Utilities.GetEnergyNeeded(point, from)
     local distance = Utilities.distance(point, from, 2)
     local energy = distance * Variables.Q
@@ -373,10 +333,12 @@ function Utilities.SampleNewDeployPosiiton(PoseTable, Range, SampleCounter)
         PosY = PositionY - Range/2    
     end
     Map.quantumModify(PosX, PosY, Constants.background_color, Constants.base_color) 
-    NewDeployPosition = {PosX, PosY, "Random"}
-    PoseTable = addPose(PoseTable, NewDeployPosition)
+    NewDeployPosition = {PosX, PosY, Constants.RandomDir}
+    
 
-
+    if (Utilities.GetEnergyNeeded(NewDeployPosition,{PositionX,PositionY})*2 < Variables.E) then
+        PoseTable = addPose(PoseTable, NewDeployPosition)
+    end
 
     return PoseTable
 end
@@ -400,13 +362,23 @@ function Utilities.CorrectPosition(position)
     end
     return position
 end
--- Sorry for this  collection of fors
+
 function Utilities.GenerateDeployPositions(PoseTable)
-    
     NumPointsTops = Variables.J
     NumPointsSides = Variables.K
-    
-    offset = Variables.W * NumPointsSides * 2 + Variables.W * 2
+    offset = Variables.W *(NumPointsSides * 2 +  2)
+    --Reduce the size of the lateral space until the position is reachable with the defined energy
+    while (Utilities.GetEnergyNeeded({PositionX,PositionY + Variables.Z + offset},{PositionX,PositionY})*2) >= Variables.E do
+        NumPointsSides = NumPointsSides - 1 
+        offset = Variables.W *(NumPointsSides * 2 +  2)
+    end
+    PoseTable = Utilities.GeneratePoints(PoseTable,NumPointsTops,NumPointsSides)    
+    return PoseTable
+end
+-- Sorry for this  collection of fors
+function Utilities.GeneratePoints(PoseTable,NumPointsTops,NumPointsSides)
+        
+    offset = Variables.W *(NumPointsSides * 2 +  2)
     refX = PositionX
     refY = PositionY
     
@@ -414,7 +386,9 @@ function Utilities.GenerateDeployPositions(PoseTable)
         PosX = refX + Variables.W * 2 * i
         PosY = refY + Variables.Z + offset
         ExplorerPose = {PosX, PosY, "North"}
+        if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
         PoseTable = addPose(PoseTable, ExplorerPose)
+        end
     end
     
     refX = PositionX - Variables.W
@@ -422,7 +396,9 @@ function Utilities.GenerateDeployPositions(PoseTable)
         PosX = refX - Variables.W * 2 * i
         PosY = refY + Variables.Z * 2 + offset
         ExplorerPose = {PosX, PosY, "North"}
+        if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
         PoseTable = addPose(PoseTable, ExplorerPose)
+        end
     end
     
     refX = PositionX + Variables.W
@@ -431,7 +407,9 @@ function Utilities.GenerateDeployPositions(PoseTable)
         PosX = refX + Variables.W * 2 * i
         PosY = refY + Variables.Z * 2 + offset
         ExplorerPose = {PosX, PosY, "North"}
+        if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
         PoseTable = addPose(PoseTable, ExplorerPose)
+        end
     end
     
     refX = PositionX - 2 * Variables.W
@@ -440,7 +418,9 @@ function Utilities.GenerateDeployPositions(PoseTable)
         PosX = refX - Variables.W * 2 * i
         PosY = refY + Variables.Z + offset
         ExplorerPose = {PosX, PosY, "North"}
+        if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
         PoseTable = addPose(PoseTable, ExplorerPose)
+        end
     end
     
     refX = PositionX
@@ -450,7 +430,9 @@ function Utilities.GenerateDeployPositions(PoseTable)
         PosX = refX + Variables.W * 2 * i
         PosY = refY - Variables.Z - offset
         ExplorerPose = {PosX, PosY, "South"}
+        if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
         PoseTable = addPose(PoseTable, ExplorerPose)
+        end
     end
     
     refX = PositionX - Variables.W
@@ -458,7 +440,9 @@ function Utilities.GenerateDeployPositions(PoseTable)
         PosX = refX - Variables.W * 2 * i
         PosY = refY - Variables.Z * 2 - offset
         ExplorerPose = {PosX, PosY, "South"}
+        if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
         PoseTable = addPose(PoseTable, ExplorerPose)
+        end
     end
     
     refX = PositionX + Variables.W
@@ -467,7 +451,9 @@ function Utilities.GenerateDeployPositions(PoseTable)
         PosX = refX + Variables.W * 2 * i
         PosY = refY - Variables.Z * 2 - offset
         ExplorerPose = {PosX, PosY, "South"}
+        if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
         PoseTable = addPose(PoseTable, ExplorerPose)
+        end
     end
     
     refX = PositionX - 2 * Variables.W
@@ -476,7 +462,9 @@ function Utilities.GenerateDeployPositions(PoseTable)
         PosX = refX - Variables.W * 2 * i
         PosY = refY - Variables.Z - offset
         ExplorerPose = {PosX, PosY, "South"}
+        if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
         PoseTable = addPose(PoseTable, ExplorerPose)
+        end
     end
     
     refX = PositionX
@@ -486,7 +474,9 @@ function Utilities.GenerateDeployPositions(PoseTable)
         PosY = refY + Variables.Z * 2 * i
         PosX = refX + Variables.W
         ExplorerPose = {PosX, PosY, "East"}
+        if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
         PoseTable = addPose(PoseTable, ExplorerPose)
+        end
     end
     
     refY = PositionY - Variables.W
@@ -495,7 +485,9 @@ function Utilities.GenerateDeployPositions(PoseTable)
         PosY = refY - Variables.Z * 2 * i
         PosX = refX + Variables.W * 2
         ExplorerPose = {PosX, PosY, "East"}
+        if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
         PoseTable = addPose(PoseTable, ExplorerPose)
+        end
     end
     
     refY = PositionY + Variables.W
@@ -504,7 +496,9 @@ function Utilities.GenerateDeployPositions(PoseTable)
         PosY = refY + Variables.Z * 2 * i
         PosX = refX + Variables.W * 2
         ExplorerPose = {PosX, PosY, "East"}
+        if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
         PoseTable = addPose(PoseTable, ExplorerPose)
+        end
     end
     
     refY = PositionY - 2 * Variables.W
@@ -513,7 +507,9 @@ function Utilities.GenerateDeployPositions(PoseTable)
         PosY = refY - Variables.Z * 2 * i
         PosX = refX + Variables.W
         ExplorerPose = {PosX, PosY, "East"}
+        if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
         PoseTable = addPose(PoseTable, ExplorerPose)
+        end
     end
     
     refX = PositionX
@@ -523,7 +519,9 @@ function Utilities.GenerateDeployPositions(PoseTable)
         PosY = refY + Variables.Z * 2 * i
         PosX = refX - Variables.W
         ExplorerPose = {PosX, PosY, "West"}
+        if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
         PoseTable = addPose(PoseTable, ExplorerPose)
+        end
     end
     
     refY = PositionY - Variables.W
@@ -532,7 +530,9 @@ function Utilities.GenerateDeployPositions(PoseTable)
         PosY = refY - Variables.Z * 2 * i
         PosX = refX - Variables.W * 2
         ExplorerPose = {PosX, PosY, "West"}
+        if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
         PoseTable = addPose(PoseTable, ExplorerPose)
+        end
     end
     
     refY = PositionY + Variables.W
@@ -541,7 +541,9 @@ function Utilities.GenerateDeployPositions(PoseTable)
         PosY = refY + Variables.Z * 2 * i
         PosX = refX - Variables.W * 2
         ExplorerPose = {PosX, PosY, "West"}
+        if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
         PoseTable = addPose(PoseTable, ExplorerPose)
+        end
     end
     
     refY = PositionY - 2 * Variables.W
@@ -550,7 +552,9 @@ function Utilities.GenerateDeployPositions(PoseTable)
         PosY = refY - Variables.Z * 2 * i
         PosX = refX - Variables.W
         ExplorerPose = {PosX, PosY, "West"}
+        if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
         PoseTable = addPose(PoseTable, ExplorerPose)
+        end
     end
     
     return PoseTable
