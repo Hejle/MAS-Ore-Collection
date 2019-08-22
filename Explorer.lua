@@ -69,7 +69,7 @@ function TakeStep()
         CheckEnergyStatus()
     elseif MyState == State.Exploring then
         -- Remeber to set the distance between steps properly, right now is only 1 pixel at a time
-        NextPosition = getNextStep(CurrentPosition, DeployOrientation)
+        NextPosition = getNextStep(DeployOrientation)
         Utilities.moveTorus(NextPosition)
         Search()
         CheckEnergyStatus()
@@ -84,10 +84,16 @@ function TakeStep()
         end
     elseif MyState == State.PermissionToLand then
         if Utilities.comparePoints(CurrentPosition, BaseEntrancePosition) then
-            MyState = State.EnterBase
-            Event.emit{speed = 343, description = "updateOreList", table = Memory, targetID = Group_ID}
-            Event.emit{speed = 343, description = "updateDeployPositionsList", table = LastPosition, targetID = Group_ID}
-            ClearMemory()
+            if Utilities.IsNotEmpty(Memory) then
+                MyState = State.EnterBase
+                Event.emit{speed = 343, description = "updateOreList", table = Memory, targetID = Group_ID}
+                Event.emit{speed = 343, description = "updateDeployPositionsList", table = LastPosition, targetID = Group_ID}
+                ClearMemory()
+            else
+                MyState = State.EnterBase
+                LastPosition[3] = "nil"
+                Event.emit{speed = 343, description = "updateDeployPositionsList", table = LastPosition, targetID = Group_ID}
+            end
         else
             Utilities.moveTorus(BaseEntrancePosition,BasePosition)
         end
@@ -164,7 +170,9 @@ function CleanUp()
 
 end
 
-function getNextStep(position, orientation)
+function getNextStep(orientation)
+    
+    position = {0,0}
     
     if orientation == "North" then
         
@@ -185,38 +193,11 @@ function getNextStep(position, orientation)
         
         position = {PositionX - 1, PositionY}
     
-    elseif orientation == "NorthWest" then
-        
-        position = {PositionX - 1, PositionY + 1}
-    
-    elseif orientation == "SouthWest" then
-        
-        position = {PositionX - 1, PositionY - 1}
-    
-    elseif orientation == "NorthEast" then
-        
-        position = {PositionX + 1, PositionY + 1}
-    
-    elseif orientation == "SouthEast" then
-        
-        position = {PositionX + 1, PositionY - 1}
+    elseif orientation == "Random" then
+        say("Moving to random")
     end
-    
-    if position[1] >= ENV_WIDTH then
-        position[1] = position[1] - ENV_WIDTH
-    end
-    
-    if position[1] < 0 then
-        position[1] = ENV_WIDTH + position[1]
-    end
-    
-    if position[2] >= ENV_HEIGHT then
-        position[2] = position[2] - ENV_HEIGHT
-    end
-    
-    if position[2] < 0 then
-        position[2] = ENV_HEIGHT + position[2]
-    end
+     
+    position = Utilities.CorrectPosition(position)
     
     return position
 
