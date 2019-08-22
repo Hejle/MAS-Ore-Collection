@@ -2,7 +2,7 @@ local variables = {}
 
 variables.C = 100 -- Base Capacity in ore Samples
 variables.D = 0.02 -- Ore density as a percentage
-variables.E = 100 -- Robot energy in units
+variables.E = 40 -- Robot energy in units
 variables.G = 200 -- Grid size
 variables.I = 15 -- Fixed Communication scope
 variables.J = 2 -- For the initial deploy formation, number of points on each half of the sides North/South 
