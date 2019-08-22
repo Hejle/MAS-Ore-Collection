@@ -2,6 +2,7 @@ Agent = require "ranalib_agent"
 Collision = require "ranalib_collision"
 Constants = require "Libs.Constants"
 Event = require "ranalib_event"
+Events = require "Libs.Events"
 Inspect = require "Libs.inspect"
 Map = require "ranalib_map"
 Move = require "ranalib_movement"
@@ -53,12 +54,12 @@ function HandleEvent(event)
             l_print("ERROR: eventable empty.")
         end
     
-    elseif eventDescription == "servingDeployPosition" and eventTable["target"] == ID then
+    elseif eventDescription == Events.servingDeployPosition and eventTable["target"] == ID then
         --l_print("Explorer: " .. ID .. " has recieved a deploy position, from Base: " .. sourceID .. " , " .. Inspect.inspect(eventTable))
         DeployPosition = eventTable["position"]
         DeployOrientation = eventTable["orientation"]
         MyState = State.ExitBase
-    elseif eventDescription == "baseAccesGranted" and eventTable["target"] == ID then
+    elseif eventDescription == Events.baseAccesGranted and eventTable["target"] == ID then
         MyState = State.PermissionToLand
     elseif eventDescription == "explorer_mem_clear" and eventTable["target"] == ID then
         ClearMemory()
@@ -72,20 +73,34 @@ function TakeStep()
         if Utilities.comparePoints(CurrentPosition, DeployPosition) then
             MyState = State.Exploring
         else
+            if DeployPosition[1] == nil then
+                say("sad")
+            end
             Utilities.moveTorus(DeployPosition)
         end
         CheckEnergyStatus()
+    
     elseif MyState == State.Exploring then
         -- Remeber to set the distance between steps properly, right now is only 1 pixel at a time
-        NextPosition = getNextStep(DeployOrientation)
+        NextPosition = GetNextStep(DeployOrientation, 1)
         Utilities.moveTorus(NextPosition)
-        Search()
+        
+            if DeployOrientation == Constants.R then
+                DeployOrientation = Search()
+            else
+                Search()
+            end
+
         CheckEnergyStatus()
         CheckMemoryStatus()
+
+        if Utilities.comparePoints(DeployOrientation, CurrentPosition) then
+            MyState = State.ReturningLoopComplete
+        end
     
-    elseif MyState == State.ReturningMemoryFull or MyState == State.ReturningBatteryLow then
+    elseif MyState == State.ReturningMemoryFull or MyState == State.ReturningBatteryLow or MyState == State.ReturningLoopComplete then
         if Utilities.distance(CurrentPosition, BasePosition) <= Variables.I then
-            Event.emit{speed = 0, description = "baseAccesRequest", table = {target=Group_ID}}
+            Event.emit{speed = 0, description = Events.baseAccesRequest, table = {target=Group_ID}}
             MyState = State.WaitingToLand
         else
             Utilities.moveTorus(BaseEntrancePosition)
@@ -95,44 +110,43 @@ function TakeStep()
             if Utilities.IsNotEmpty(Memory) then
                 MyState = State.EnterBase
                 SendMemoryToBase()
-                Event.emit{speed = 343, description = "updateDeployPositionsList", table = {target = Group_ID, data=LastPosition}}
+                Event.emit{speed = 343, description = Events.updateOreList, table = {target = Group_ID, data=LastPosition}}
             else
                 MyState = State.EnterBase
                 LastPosition[3] = "nil"
-                Event.emit{speed = 343, description = "updateDeployPositionsList", table = {target = Group_ID, data=LastPosition}}
+                Event.emit{speed = 343, description = Events.updateDeployPositionsList, table = {target = Group_ID, data=LastPosition}}
             end
         else
-            Utilities.moveTorus(BaseEntrancePosition,BasePosition)
+            Utilities.moveTorus(BaseEntrancePosition, BasePosition)
         end
     elseif MyState == State.EnterBase then
         if Utilities.comparePoints(CurrentPosition, BasePosition) then
             MyState = State.Base
         else
-            Utilities.moveTorus(BasePosition,BasePosition)
+            Utilities.moveTorus(BasePosition, BasePosition)
         end
     elseif MyState == State.Base then
         if #Memory > 0 then
             SendMemoryToBase()
         elseif UsedEnergy == 0 then
-            Event.emit{speed = 343, description = "deployPositionRequested", table = {target = Group_ID}}
+            Event.emit{speed = 343, description = Events.deployPositionRequested, table = {target = Group_ID}}
             MyState = State.WaitForOrders
         else
             -- stay in the base until the battery has been charged
-        end
+            end
     elseif MyState == State.ExitBase then
         if Utilities.comparePoints(CurrentPosition, BaseExitPosition) then
             MyState = State.Deploying
         else
-            Utilities.moveTorus(BaseExitPosition,BasePosition)
+            Utilities.moveTorus(BaseExitPosition, BasePosition)
         end
     elseif MyState == State.WaitForOrders then
         -- Do nothing
-    elseif MyState == State.WaitingToLand then
+        elseif MyState == State.WaitingToLand then
         -- Do nothing
-    end
-    
-    UpdateEnergy()
-    CurrentPosition = {PositionX, PositionY}
+        end
+        UpdateEnergy()
+        CurrentPosition = {PositionX, PositionY}
 
 end
 
@@ -147,16 +161,17 @@ end
 function CheckEnergyStatus()
     if UsedEnergy >= TotalEnergy then
         MyState = State.ReturningBatteryLow
-        LastPosition = {PositionX, PositionY, DeployOrientation}
+        LastPosition = GetNextStep(DeployOrientation,Variables.P)
     end
 end
 
 function CheckMemoryStatus()
     if UsedMemory >= TotalMemory then
         MyState = State.ReturningMemoryFull
-        LastPosition = {PositionX, PositionY, DeployOrientation}
+        LastPosition = GetNextStep(DeployOrientation,Variables.P)
     end
 end
+
 
 function UpdateEnergy()
     StateEnergyCost = 0
@@ -174,50 +189,90 @@ end
 
 function Search()
     local table = Map.radialMapColorScan(Variables.P, Constants.ore_color[1], Constants.ore_color[2], Constants.ore_color[3])
-    
+    table = Utilities.TableConcat(table, Map.radialMapColorScan(Variables.P, Constants.ore_color_found[1], Constants.ore_color_found[2], Constants.ore_color_found[3]))
+    VotesForDirections = {0, 0, 0, 0}
     if table ~= nil then
         for i = 1, #table do
-            if AddInfoToMemory({table[i].posX, table[i].posY}) then
-                --Map.quantumModify(table[i].posX, table[i].posY, Constants.ore_color, Constants.ore_color_found)
+            OreX = table[i].posX
+            OreY = table[i].posY
+            
+            if AddInfoToMemory({OreX, OreY}) then
+                
+                --Map.quantumModify(OreX, OreY, Constants.ore_color, Constants.ore_color_found)
+                
+                -- Check for direction with more ores
+                dx = OreX - PositionX
+                dy = OreY - PositionY
+                
+                if (dx < 0 and dy < 0) then
+                    VotesForDirections[3] = VotesForDirections[3] + 1
+                elseif (dx < 0 and dy > 0) then
+                    VotesForDirections[2] = VotesForDirections[2] + 1
+                elseif (dx > 0 and dy < 0) then
+                    VotesForDirections[4] = VotesForDirections[4] + 1
+                elseif (dx > 0 and dy > 0) then
+                    VotesForDirections[1] = VotesForDirections[1] + 1
+                end
+            else
+                break
             end
         end
     end
+    
+    local maxVotes = math.max(VotesForDirections[1], VotesForDirections[2], VotesForDirections[3], VotesForDirections[4])
+    local selectedQuadrant = 0
+    if maxVotes == 0 then
+        selectedQuadrant = math.random(4)
+    else
+        for i = 1, #VotesForDirections do
+            if VotesForDirections[i] == maxVotes then
+                selectedQuadrant = i
+                break
+            end
+        end
+    end
+    if selectedQuadrant == 1 then
+        direction = Constants.NorthEast
+    elseif selectedQuadrant == 2 then
+        direction = Constants.NortWest
+    elseif selectedQuadrant == 3 then
+        direction = Constants.SouthWest
+    elseif selectedQuadrant == 4 then
+        direction = Constants.SouthEast
+    end
+    
+    
+    return direction
 end
+
 
 function CleanUp()
 
 end
 
-function getNextStep(orientation)
+function GetNextStep(orientation, stepsize)
     
-    position = {0,0}
-    
-    if orientation == "North" then
-        
-        position = {PositionX, PositionY + 1}
-        Agent.changeColor{r = 0, g = 255, b = 0}
-    
-    elseif orientation == "South" then
-        
-        position = {PositionX, PositionY - 1}
-        Agent.changeColor{r = 255, g = 255, b = 255}
-    
-    elseif orientation == "East" then
-        
-        position = {PositionX + 1, PositionY}
-        Agent.changeColor{r = 0, g = 0, b = 255}
-    
-    elseif orientation == "West" then
-        
-        position = {PositionX - 1, PositionY}
-    
-    elseif orientation == "Random" then
+    position = {0, 0}
+    if orientation == Constants.North then
+        position = {PositionX, PositionY + stepsize}
+    elseif orientation == Constants.South then
+        position = {PositionX, PositionY - stepsize}
+    elseif orientation == Constants.East then
+        position = {PositionX + stepsize, PositionY}
+    elseif orientation == Constants.West then
+        position = {PositionX - stepsize, PositionY}
+    elseif orientation == Constants.NorthEast then
+        position = {PositionX + stepsize, PositionY + stepsize}
+    elseif orientation == Constants.NorthWest then
+        position = {PositionX - stepsize, PositionY + stepsize}
+    elseif orientation == Constants.SouthWest then
+        position = {PositionX - stepsize, PositionY - stepsize}
+    elseif orientation == Constants.SouthEast then
+        position = {PositionX + stepsize, PositionY - stepsize}
     end
-     
-    position = Utilities.CorrectPosition(position)
     
+    position = Utilities.CorrectPosition(position)
     return position
-
 end
 
 function AddInfoToMemory(info)
@@ -230,22 +285,22 @@ function AddInfoToMemory(info)
 end
 
 function AddInfoListToMemory(list)
-    if #list > TotalMemory-UsedMemory then
-          return false
+    if #list > TotalMemory - UsedMemory then
+        return false
     else
-          for i=1, #list do
-                table.insert(Memory, list[1])
-                UsedMemory = UsedMemory - 1
-          end
+        for i = 1, #list do
+            table.insert(Memory, list[1])
+            UsedMemory = UsedMemory - 1
+        end
     end
 end
 
 function RemoveInfoFromMemory(info)
-    for i=1, #Memory do
-          if Utilities.comparePoints(info, Memory[i]) then
-                table.remove(Memory, i)
-                UsedMemory = UsedMemory - 1
-          end
+    for i = 1, #Memory do
+        if Utilities.comparePoints(info, Memory[i]) then
+            table.remove(Memory, i)
+            UsedMemory = UsedMemory - 1
+        end
     end
 end
 

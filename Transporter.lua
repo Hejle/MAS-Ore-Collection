@@ -80,7 +80,7 @@ function TakeStep()
                   if TimeOut == 0 then
                         if Transporter.UpdateEnergy(Variables.R) then
                               Event.emit{speed = 343, description = Events.RequestOrders, table = {target=Group_ID, transporterID = ID, energy=TotalEnergy, backPack=BackpackSize}}
-                              TimeOut = 1000
+                              TimeOut = 10
                         end
                   end
                   TimeOut = TimeOut - 1
@@ -204,6 +204,7 @@ function Transporter.GetTarget(pos)
 end
 
 function Transporter.Mine(pos)
+      say("MINING")
       Map.quantumModify(pos[1], pos[2], Constants.ore_color_found, {r=255, 255, 255})
       Backpack = Backpack + 1
 end
