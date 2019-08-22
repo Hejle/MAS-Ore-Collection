@@ -18,6 +18,7 @@ BasePos = {}
 BaseExitPos = {}
 BaseEntrancePos = {}
 WaitingTransporters = {}
+TotalMemory = Variables.S
 
 
 function InitializeAgent()
@@ -41,9 +42,11 @@ function TakeStep()
     end
     if Utilities.IsNotEmpty(WaitingTransporters) then
         local id, value = next(WaitingTransporters)
-        local list = SendOre(value[1], value[2])
-        Event.emit{speed = 343, description = Events.RetrieveOrders, table = list, targetID = id}
-        WaitingTransporters[id] = nil
+        local list = SendOre(value[1], value[2], id)
+        if Utilities.IsNotEmpty(list) then
+            Event.emit{speed = 343, description = Events.RetrieveOrders, table = list, targetID = id}
+            WaitingTransporters[id] = nil
+        end
     end
     Counter = Counter + 1
 end
@@ -76,10 +79,18 @@ function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
         --say("Update OreList: " .. sourceID)
         StoreOre(eventTable)
     elseif eventDescription == Events.RequestOrders then
+<<<<<<< HEAD
         table.insert(WaitingTransporters, eventTable["transporterID"], {eventTable["energy"], eventTable["backPack"]})
     --UpdateOreList()
     elseif eventDescription == Events.baseAccesRequest and ID ~= sourceID then
         Event.emit{speed = 0, description = Events.baseAccesGranted, targetID = sourceID}
+=======
+        table.insert(WaitingTransporters, eventTable["transporterID"],{eventTable["energy"], eventTable["backPack"]})
+    elseif eventDescription == Events.ReturningMinerals then
+        HandleReturningMinerals(eventTable["transporterID"], eventTable["minerals"], eventTable["memo"])
+    elseif eventDescription == "baseAccesRequest" and ID  ~= sourceID then
+        Event.emit{speed = 0, description = "baseAccesGranted", targetID = sourceID}
+>>>>>>> 2a880d810b721a8908e3b90f22681053e95e52c4
     end
 
 end
@@ -98,20 +109,41 @@ function CleanUp()
 
 end
 
+function HandleReturningMinerals(robot, Minerals, Memory)
+    say("getting ore")
+    if Utilities.IsNotEmpty(Memory) then
+        StoreOre(Memory)
+    end
+    local f = function(v1, v2)
+        return (v1[2] == v2)
+    end
+    KnownOresBeingCollected = Utilities.RemoveAllValuesArrayFunction(KnownOresBeingCollected, f, robot)
+    Event.emit{speed = 343, description = Events.OreStored, table = {}, targetID = robot}
+end
+
 
 function StoreOre(list)
+<<<<<<< HEAD
     for i = 1, #list do
         table.insert(KnownOresBeingCollected, list[i])
+=======
+    if(#list + #KnownOresUncollected + #KnownOresBeingCollected > TotalMemory) then
+        --NoMemory
+    else
+        for i=1,#list do
+            table.insert(KnownOresUncollected, list[i])
+        end
+>>>>>>> 2a880d810b721a8908e3b90f22681053e95e52c4
     end
 end
 
-function SendOre(energy, size)
+function SendOre(energy, size, robot)
     local result = {}
-    Utilities.SortUsingDistance(KnownOresBeingCollected, BasePos)
-    return SendOresSorted(energy, BasePos, result, size)
+    Utilities.SortUsingDistance(KnownOresUncollected, BasePos)
+    return SendOresSorted(energy, BasePos, result, size, robot)
 end
 
-function SendOresSorted(energy, comparePoint, resultList, size)
+function SendOresSorted(energy, comparePoint, resultList, size, robot)
     local addedPoint = false
     local usedEnergy = 0
     local newPoint = {}
@@ -120,21 +152,30 @@ function SendOresSorted(energy, comparePoint, resultList, size)
     if #resultList == size then
         return resultList
     end
+<<<<<<< HEAD
     
     local point = Utilities.GetValueWithSortestDistance(KnownOres, comparePoint)
+=======
+
+    local point = Utilities.GetValueWithSortestDistance(KnownOresUncollected, comparePoint)
+>>>>>>> 2a880d810b721a8908e3b90f22681053e95e52c4
     if point ~= nil then
         usedEnergy = Utilities.GetEnergyNeeded(point[1], comparePoint)
         getHomeEnergy = Utilities.GetEnergyNeeded(point[1], BasePos)
         if usedEnergy + getHomeEnergy < energy then
             table.insert(resultList, point[1])
-            table.insert(KnownOresBeingCollected, point[1])
+            table.insert(KnownOresBeingCollected, {point[1], robot})
             newPoint = point[1]
+<<<<<<< HEAD
             table.remove(KnownOres, point[2])
+=======
+            table.remove( KnownOresUncollected, point[2])
+>>>>>>> 2a880d810b721a8908e3b90f22681053e95e52c4
             addedPoint = true
         end
     end
     if addedPoint then
-        return SendOresSorted(energy - usedEnergy, newPoint, resultList, size)
+        return SendOresSorted(energy - usedEnergy, newPoint, resultList, size,robot)
     else
         return resultList
     end

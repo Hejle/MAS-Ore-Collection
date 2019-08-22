@@ -29,6 +29,46 @@ function Utilities.IsNotEmpty(T)
     return true
 end
 
+function Utilities.RemoveAllValuesArray(T, Value)
+    local Result = {}
+    for i = 1, #T do
+        if(not(T[i] == Value)) then
+            table.insert(Result, T[i])
+        end
+    end
+    return Result
+end
+
+function Utilities.RemoveAllValuesDictionary(T, Value)
+    local Result = {}
+    for k,v in pairs(T) do
+        if(not(v == Value)) then
+            table.insert(Result, k,v)
+        end
+    end
+    return Result
+end
+
+function Utilities.RemoveAllValuesArrayFunction(T, F, value)
+    local Result = {}
+    for i = 1, #T do
+        if (not (F(T[i], value))) then
+            table.insert(Result, T[i])
+        end
+    end
+    return Result
+end
+
+function Utilities.RemoveAllValuesDictionaryFunction(T, F, value)
+    local Result = {}
+    for k,v in pairs(T) do
+        if(not (F(T[v], value))) then
+            table.insert(Result, k,v)
+        end
+    end
+    return Result
+end
+
 function Utilities.GetEnergyNeeded(point, from)
     local distance = Utilities.distance(point, from, 2)
     local energy = distance * Variables.Q

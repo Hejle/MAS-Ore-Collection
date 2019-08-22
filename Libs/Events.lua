@@ -11,6 +11,8 @@ Events.updateDeployPositionsList = "updateDeployPositionsList"
 Events.deployPositionRequested = "deployPositionRequested"
 Events.servingDeployPosition = "servingDeployPosition"
 Events.init = "init"
+Events.ReturningMinerals = "returning_minerals"
+Events.OreStored = "ore_stored"
 
 
 return Events

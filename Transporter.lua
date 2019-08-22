@@ -12,6 +12,8 @@ State = require "Libs.RobotState"
 Utilities = require "Libs.Utilities"
 Variables = require "Libs.Variables"
 
+Transporter = {}
+
 --parameters
 Counter = 0
 Group_ID = 0
@@ -36,6 +38,7 @@ TimeOut = 0
 function InitializeAgent()
       SharedPosition.StoreInformation(ID, {PositionX, PositionY})
       MyState = State.NotInit
+      Agent.changeColor{id=ID, r=0,g=0,b=255}
 end
 
 function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
@@ -51,25 +54,28 @@ function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
             end
         
       elseif eventDescription == Events.RetrieveOrders then
-            say("Getting Orders: " .. sourceID)
-            say(Inspect.inspect(eventTable))
-            AddInfoListToMemory(eventTable)
+            say("Getting Orders")
+            Transporter.AddInfoListToMemory(eventTable)
             MyState = State.ExitBase
+            TimeOut = 0
+      elseif eventDescription == Events.OreStored then
+            say("Minerals have been sent")
+            Backpack = 0
+            Memory = {}
             TimeOut = 0
       end
 end
 
 function TakeStep()
-      say(Inspect.inspect(MyState))
       local CurrentPosition = {PositionX, PositionY}
       local EnergyToGetHome = 0
       if not #BasePosition == 2 then
             EnergyToGetHome = Utilities.GetEnergyNeeded(CurrentPosition, BasePosition)
       end
-      if MyState == State.Base and UsedEnergy == 0 and Backpack == 0 then
+      if MyState == State.Base then
             if UsedEnergy == 0 and Backpack == 0 then
                   if TimeOut == 0 then
-                        if UpdateEnergy(Variables.R) then
+                        if Transporter.UpdateEnergy(Variables.R) then
                               Event.emit{speed = 343, description = Events.RequestOrders, table = {transporterID = ID, energy=TotalEnergy, backPack=BackpackSize}, targetID = Group_ID}
                               say("Requested")
                               TimeOut = 1000
@@ -77,11 +83,22 @@ function TakeStep()
                   end
                   TimeOut = TimeOut - 1
             end
-            UpdateEnergy(-Variables.Q) --Recharging
+
+            if Backpack > 0 then
+                  if TimeOut == 0 then
+                        if Transporter.UpdateEnergy(Variables.R) then
+                              Event.emit{speed = 343, description = Events.ReturningMinerals, table = {transporterID = ID, minerals=Backpack, memo=Memory}, targetID = Group_ID}
+                              say("Sending Ore")
+                              TimeOut = 1000
+                        end
+                  end
+                  TimeOut = TimeOut - 1
+            end
+            Transporter.UpdateEnergy(-Variables.Q) --Recharging
       end
 
-      if not ((MyState == State.NotInit) or (MyState == State.Base)) then
-            if MyState ~= State.Returning and EnergyToGetHome + 15*Variables.Q > TotalEnergy - UsedEnergy then
+      if not ((MyState == State.NotInit) or (MyState == State.Base) or (MyState == State.Returning)) then
+            if (EnergyToGetHome + 15*Variables.Q > TotalEnergy - UsedEnergy) then
                   if  EnergyToGetHome > TotalEnergy - UsedEnergy then
                         MyState = State.GoingToDie
                   end
@@ -89,7 +106,19 @@ function TakeStep()
             end
       end
 
-      if (not ((MyState == State.NotInit) or (MyState == State.Base) or (MyState == State.Returning))and #Memory <=0) then
+      if MyState == State.BackpackFull and
+      not ((MyState == State.Returning)
+      or (MyState == State.Entering)
+      or (MyState == State.NotInit)
+      or (MyState == State.Base)) then
+            --Could work as transmitter or go home, or go somewhere else
+            MyState = State.Returning
+      end
+
+      if (not ((MyState == State.NotInit)
+      or (MyState == State.Base)
+      or (MyState == State.Entering)
+      or (MyState == State.Returning))and #Memory <=0) then
             MyState = State.NoOrders
       end
 
@@ -100,11 +129,10 @@ function TakeStep()
 
       if MyState == State.Entering then
             if Utilities.comparePoints(CurrentPosition, BasePosition) then
-                  say("here")
                   MyState = State.Base
             else
-                  if UpdateEnergy(Variables.Q) then
-                        Utilities.moveTorus(BasePosition)
+                  if Transporter.UpdateEnergy(Variables.Q) then
+                        Utilities.moveTorus(BasePosition, BasePosition)
                   end
             end
       end
@@ -113,7 +141,7 @@ function TakeStep()
             if Utilities.comparePoints(CurrentPosition, BaseEntrancePos) then
                   MyState = State.Entering
             else
-                  if UpdateEnergy(Variables.Q) then
+                  if Transporter.UpdateEnergy(Variables.Q) then
                         Utilities.moveTorus(BaseEntrancePos)
                   end
             end
@@ -123,7 +151,7 @@ function TakeStep()
             if Utilities.comparePoints(CurrentPosition, BaseExitPos) then
                   MyState = State.GatherMinerals
             else
-                  if UpdateEnergy(Variables.Q) then
+                  if Transporter.UpdateEnergy(Variables.Q) then
                         Utilities.moveTorus(BaseExitPos)
                   end
             end
@@ -131,16 +159,17 @@ function TakeStep()
 
       if MyState == State.GatherMinerals then
             if #TargetPosition == 0 then
-                  TargetPosition = GetTarget(CurrentPosition)
+                  TargetPosition = Transporter.GetTarget(CurrentPosition)
             else
                   if Utilities.comparePoints(CurrentPosition, TargetPosition) then
-                        Mine(CurrentPosition)
-                        RemoveInfoFromMemory(TargetPosition)
+                        Transporter.Mine(CurrentPosition)
+                        Transporter.RemoveInfoFromMemory(TargetPosition)
+                        TargetPosition = {}
                         if Backpack == BackpackSize then
                               MyState = State.BackpackFull
                         end
                   else
-                        if UpdateEnergy(Variables.Q) then
+                        if Transporter.UpdateEnergy(Variables.Q) then
                               Utilities.moveTorus(TargetPosition)
                         end
                   end
@@ -152,12 +181,12 @@ function CleanUp()
 
 end
 
-function UpdateEnergy(e)
+function Transporter.UpdateEnergy(e)
       if UsedEnergy + e > TotalEnergy then
             return false
       end
 
-      UsedEnergy = UsedEnergy - e
+      UsedEnergy = UsedEnergy + e
       if UsedEnergy < 0 then
             UsedEnergy = 0
       end
@@ -165,7 +194,7 @@ function UpdateEnergy(e)
       return true
 end
 
-function GetTarget(pos)
+function Transporter.GetTarget(pos)
       local result = Utilities.GetValueWithSortestDistance(Memory, pos, 0)
       if result == nil then
             return {}
@@ -173,14 +202,13 @@ function GetTarget(pos)
       return result[1]
 end
 
-function Mine(pos)
-      say("mining")
-      Map.quantumModify(pos[1], pos[2], Constants.ore_color_found, Constants.background_color)
+function Transporter.Mine(pos)
+      Map.quantumModify(pos[1], pos[2], Constants.ore_color_found, {r=255, 255, 255})
       Backpack = Backpack + 1
 end
 
 
-function AddInfoToMemory(info)
+function Transporter.AddInfoToMemory(info)
       if(Utilities.ListContainsPoint(Memory, info)) then
             return true --Already in memory
       end
@@ -192,17 +220,17 @@ function AddInfoToMemory(info)
       return false
 end
 
-function AddInfoListToMemory(list)
+function Transporter.AddInfoListToMemory(list)
       if #list > TotalMemory-UsedMemory then
             return false
       else
             for i=1, #list do
-                  AddInfoToMemory(list[i])
+                  Transporter.AddInfoToMemory(list[i])
             end
       end
 end
 
-function RemoveInfoFromMemory(info)
+function Transporter.RemoveInfoFromMemory(info)
       for i=1, #Memory do
             if Utilities.comparePoints(info, Memory[i]) then
                   table.remove(Memory, i)
@@ -213,27 +241,27 @@ function RemoveInfoFromMemory(info)
       return false
 end
 
-function RemoveIndexFromMemory(index)
+function Transporter.RemoveIndexFromMemory(index)
       if Memory[index] ~= nil then
           table.remove(Memory, index)
           UsedMemory = UsedMemory - 1
       end
 end
 
-function AlterInfoFromMemory(info, index)
+function Transporter.AlterInfoFromMemory(info, index)
       if Memory[index] ~= nil then
           table.insert(Memory, index, info)
           return true
       else
-          return AddInfoToMemory(index, info)
+          return Transporter.AddInfoToMemory(index, info)
       end
 end
 
-function GetMemory(index)
+function Transporter.GetMemory(index)
       return Memory[index]
 end
 
-function ClearMemory()
+function Transporter.ClearMemory()
       Memory = {}
       UsedMemory = 0
 end
