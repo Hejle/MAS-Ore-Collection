@@ -42,6 +42,9 @@ function HandleEvent(event)
     local sourceID = event.ID
     local eventDescription = event.description
     local eventTable = event.table
+    if(Utilities.distance({sourceX, sourceY}, {PositionX, PositionY}) > Variables.I) then
+        return
+    end
     if eventDescription == "init" and Group_ID == 0 then
         if (eventTable ~= nil) then
             Group_ID = eventTable["group"]

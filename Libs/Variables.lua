@@ -1,6 +1,6 @@
 local variables = {}
 
-variables.C = 100 -- Base Capacity in ore Samples
+variables.C = 1000 -- Base Capacity in ore Samples
 variables.D = 0.02 -- Ore density as a percentage
 variables.E = 10000 -- Robot energy in units
 variables.G = 200 -- Grid size

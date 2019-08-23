@@ -10,6 +10,8 @@ Utilities = require "Libs.Utilities"
 
 --parameters
 Counter = 0
+MineralCapacity = Variables.C
+Minerals = 0
 DeployPositionsList = {}
 KnownOresUncollected = {}
 ExplorerPose = {}
@@ -17,7 +19,7 @@ BasePos = {}
 BaseExitPos = {}
 BaseEntrancePos = {}
 WaitingTransporters = {}
-TotalMemory = 1000000000--Variables.S
+TotalMemory = Variables.S
 LandingList = {}
 
 
@@ -127,13 +129,19 @@ function CleanUp()
 
 end
 
-function HandleReturningMinerals(robot, Minerals, mem)
+function HandleReturningMinerals(robot, min, mem)
     --if Utilities.IsNotEmpty(mem) then
         --StoreOre(mem)
     --end
     local f = function(v1, v2)
         return (v1[2] == v2)
     end
+    if (Minerals + min > MineralCapacity) then
+        Minerals = MineralCapacity
+    else
+        Minerals = Minerals + min
+    end
+
     Event.emit{speed = 343, description = Events.OreStored, table = {target=robot}}
 end
 
