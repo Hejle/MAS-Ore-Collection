@@ -188,7 +188,7 @@ function UpdateEnergy()
     UsedEnergy = UsedEnergy + StateEnergyCost
     if UsedEnergy >= TotalEnergy then
         MyState = State.Dead
-        say("I died: " .. ID)
+        --say("I died: " .. ID)
     end
 end
 

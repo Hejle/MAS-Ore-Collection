@@ -21,6 +21,8 @@ BaseEntrancePos = {}
 WaitingTransporters = {}
 TotalMemory = Variables.S
 LandingList = {}
+EvaluationData = {}
+Filename =  Variables.Filename
 
 
 function InitializeAgent()
@@ -56,6 +58,9 @@ function TakeStep()
             end
         end
     end
+    if Counter % 100 == 0 then
+    table.insert(EvaluationData,{Counter,Minerals})
+    end
     Counter = Counter + 1
 end
 
@@ -82,9 +87,9 @@ function HandleEvent(event)
         DistanceToDeploy = Utilities.distance(newDeployPosition, BasePos)
         
         if eventTable[3] == "nil" then
-            say("Explorer " .. sourceID .. " didn't find any ore.")
+            --say("Explorer " .. sourceID .. " didn't find any ore.")
         elseif DistanceToDeploy > 150 then -- Variables.G/2 then
-            say("Explorer " .. sourceID .. " reached max distance " .. DistanceToDeploy)
+            --say("Explorer " .. sourceID .. " reached max distance " .. DistanceToDeploy)
         else
             table.insert(DeployPositionsList, eventTable)
         end
@@ -131,6 +136,18 @@ end
 
 function CleanUp()
 
+  SaveDatatoFile(EvaluationData,Filename)
+end
+
+function SaveDatatoFile(dataTable , filename)
+    file = io.open(filename ..".csv", "w")
+      
+    for i=1,#dataTable do
+        
+        temp = table.remove( dataTable,1)
+        file:write(temp[1] .. "," .. temp[2].."\n")
+    end
+    file:close()
 end
 
 function HandleReturningMinerals(robot, min, mem)
