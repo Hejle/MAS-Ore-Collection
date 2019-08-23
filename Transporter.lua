@@ -47,7 +47,7 @@ function HandleEvent(event)
       local sourceID = event.ID
       local eventDescription = event.description
       local eventTable = event.table
-      if(Utilities.distance({sourceX, sourceY}, {PositionX, PositionY}) > Variables.I) then
+      if(Utilities.distance({sourceX, sourceY}, {PositionX, PositionY}) > Variables.I) or MyState == State.Disable then
             return
       end
       if eventDescription == "init" and Group_ID == 0 then
@@ -60,7 +60,8 @@ function HandleEvent(event)
             else
                 l_print("ERROR: eventable empty.")
             end
-        
+      elseif eventDescription == Events.Disable and eventTable["target"] == ID then
+            MyState = State.Disable
       elseif eventDescription == Events.RetrieveOrders and eventTable["target"] == ID then
             Transporter.AddInfoListToMemory(eventTable["data"])
             MyState = State.ExitBase
@@ -111,6 +112,7 @@ function TakeStep()
       or (MyState == State.Base)
       or (MyState == State.WaitingToLand)
       or (MyState == State.Entering)
+      or (MyState == State.Disable)
       or (MyState == State.PermissionToLand)
       or (MyState == State.Returning)) then
             if (EnergyToGetHome + 15*Variables.Q > TotalEnergy - UsedEnergy) then
@@ -126,6 +128,7 @@ function TakeStep()
       or (MyState == State.Entering)
       or (MyState == State.WaitingToLand)
       or (MyState == State.PermissionToLand)
+      or (MyState == State.Disable)
       or (MyState == State.NotInit)
       or (MyState == State.Base)) then
             --Could work as transmitter or go home, or go somewhere else
@@ -134,6 +137,7 @@ function TakeStep()
 
       if (not ((MyState == State.NotInit)
       or (MyState == State.Base)
+      or (MyState == State.Disable)
       or (MyState == State.WaitingToLand)
       or (MyState == State.PermissionToLand)
       or (MyState == State.Entering)

@@ -17,12 +17,8 @@ variables.Pick =  1 -- Cost of picking an ore sample
 variables.S = 10-- Memorysize of each robot
 variables.T = 100 -- Maximum number of cycles
 variables.W = 5 -- Maximum number of ore a robot can grab
-
-
-
-
-variables.X = 19 -- Number of explorers per base
-variables.Y = 1-- Number of transporters per base
+variables.X = 10 -- Number of explorers per base
+variables.Y = 10-- Number of transporters per base
 variables.W = variables.P-1 -- Separation distance between explorers when being deployed (x-axis)
 variables.Z = variables.P-1 -- Separation distance between explorers when being deployed (y-axis)
 variables.Filename = "RatioTranporterExplorers_19_1"

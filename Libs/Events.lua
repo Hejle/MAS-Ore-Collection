@@ -13,6 +13,7 @@ Events.servingDeployPosition = "servingDeployPosition"
 Events.init = "init"
 Events.ReturningMinerals = "returning_minerals"
 Events.OreStored = "ore_stored"
+Events.Disable = "Disable"
 
 
 return Events

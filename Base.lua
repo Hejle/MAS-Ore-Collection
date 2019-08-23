@@ -98,6 +98,7 @@ function HandleEvent(event)
             Event.emit{speed = 0, description = "explorer_mem_clear", table = {target=sourceID}}
         else
             --Do something if theres not space for ores
+            Event.emit{speed = 343, description = Events.Disable, table = {target=sourceID}}
         end
     elseif eventDescription == Events.RequestOrders and ID == eventTable["target"] then
         table.insert(WaitingTransporters, eventTable["transporterID"],{eventTable["energy"], eventTable["backPack"]})
@@ -135,7 +136,6 @@ function InitRobots()
 end
 
 function CleanUp()
-
   SaveDatatoFile(EvaluationData,Filename)
 end
 
@@ -151,44 +151,35 @@ function SaveDatatoFile(dataTable , filename)
 end
 
 function HandleReturningMinerals(robot, min, mem)
-    --if Utilities.IsNotEmpty(mem) then
-        --StoreOre(mem)
-    --end
-    local f = function(v1, v2)
-        return (v1[2] == v2)
-    end
-    if (Minerals + min > MineralCapacity) then
-        Minerals = MineralCapacity
+    if (Minerals == MineralCapacity) then
+        --Redirect or something
+        say("Minerals is full")
+        Event.emit{speed = 343, description = Events.Disable, table = {target=robot}}
     else
-        Minerals = Minerals + min
+        if (Minerals + min > MineralCapacity) then
+            Minerals = MineralCapacity
+        else
+            Minerals = Minerals + min
+        end
+        Event.emit{speed = 343, description = Events.OreStored, table = {target=robot}}
     end
-
-    Event.emit{speed = 343, description = Events.OreStored, table = {target=robot}}
 end
 
 
 function StoreOre(list)
-    for i=1,#list do
-        if Utilities.IsPoint(list[i]) then
-            Map.quantumModify(list[i][1], list[i][2], Constants.ore_color, Constants.ore_color_found)
-            table.insert(KnownOresUncollected, list[i])
+    if (Minerals == MineralCapacity) then
+        say("Minerals is full")
+        return false
+    else
+        for i=1,#list do
+            if Utilities.IsPoint(list[i]) then
+                Map.quantumModify(list[i][1], list[i][2], Constants.ore_color, Constants.ore_color_found)
+                table.insert(KnownOresUncollected, list[i])
+            end
         end
+        return true
     end
-    --if (#list + #KnownOresUncollected > TotalMemory) then
-    --    if #list < #KnownOresUncollected then
-    --        return false
-    --    else
-    --        KnownOresUncollected = {}
-    --    end
-    --else
-    --    for i=1,#list do
-    --        if Utilities.IsPoint(list[i]) then
-    --            Map.quantumModify(list[i][1], list[i][2], Constants.ore_color, Constants.ore_color_found)
-    --            table.insert(KnownOresUncollected, list[i])
-    --        end
-    --    end
-    --end
-    return true
+    return false
 end
 
 function SendOre(energy, size, robot)

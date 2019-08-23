@@ -42,7 +42,7 @@ function HandleEvent(event)
     local sourceID = event.ID
     local eventDescription = event.description
     local eventTable = event.table
-    if(Utilities.distance({sourceX, sourceY}, {PositionX, PositionY}) > Variables.I) then
+    if(Utilities.distance({sourceX, sourceY}, {PositionX, PositionY}) > Variables.I) or MyState == State.Disable then
         return
     end
     if eventDescription == "init" and Group_ID == 0 then
@@ -56,7 +56,8 @@ function HandleEvent(event)
         else
             l_print("ERROR: eventable empty.")
         end
-    
+    elseif eventDescription == Events.Disable and eventTable["target"] == ID then
+        MyState = State.Disable
     elseif eventDescription == Events.servingDeployPosition and eventTable["target"] == ID then
         --l_print("Explorer: " .. ID .. " has recieved a deploy position, from Base: " .. sourceID .. " , " .. Inspect.inspect(eventTable))
         DeployPosition = eventTable["position"]
