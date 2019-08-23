@@ -250,8 +250,10 @@ function Transporter.GetTarget(pos)
 end
 
 function Transporter.Mine(pos)
-      Map.quantumModify(pos[1], pos[2], Constants.ore_color_found, {r=255, 255, 255})
-      Backpack = Backpack + 1
+      if Transporter.UpdateEnergy(Variables.Pick) then
+            Map.quantumModify(pos[1], pos[2], Constants.ore_color_found, {r=255, 255, 255})
+            Backpack = Backpack + 1
+      end
 end
 
 
