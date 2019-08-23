@@ -80,6 +80,19 @@ function Utilities.RemoveAllValuesDictionaryFunction(T, F, value)
     return Result
 end
 
+function Utilities.IsSameColor(c1, c2)
+    if type(c1) == "table" and type(c2) == "table" then
+        if #c1 == 3 and #c2 == 3 then
+            if c1[1] == c2[1]
+                and c1[2] == c2[2]
+                and c1[3] == c2[3] then
+                return true
+            end
+        end
+    end
+    return false
+end
+
 function Utilities.GetEnergyNeeded(point, from)
     local distance = Utilities.distance(point, from, 2)
     local energy = distance * Variables.Q
