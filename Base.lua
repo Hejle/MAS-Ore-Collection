@@ -104,14 +104,18 @@ function HandleEvent(event)
     end
 end
 
-function GetNewDeploytPoint()
-    DeployPositionsList = Utilities.SampleNewDeployPosiiton(DeployPositionsList, 10, SampleCounter)
+function GetNewDeploytPoint(loop)
+    loop = loop or 0
+    if (loop > 15) then
+        SampleCounter = 1
+    end
+    DeployPositionsList = Utilities.SampleNewDeployPosiiton(DeployPositionsList, 2, SampleCounter)
     SampleCounter = SampleCounter + 1
     local Pose = table.remove(DeployPositionsList, 1)
     if Utilities.IsPoint({Pose[1], Pose[2]}) then
         return Pose
     else
-        return GetNewDeploytPoint()
+        return GetNewDeploytPoint(loop + 1)
     end
 end
 
