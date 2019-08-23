@@ -74,16 +74,20 @@ end
 function TakeStep()
       local CurrentPosition = {PositionX, PositionY}
       local EnergyToGetHome = 0
+      if Counter % 2000 then
+            --say(Inspect.inspect(MyState))
+      end
 
       if not #BasePosition == 2 then
             EnergyToGetHome = Utilities.GetEnergyNeeded(CurrentPosition, BasePosition)
       end
       if MyState == State.Base then
-            if UsedEnergy == 0 and Backpack == 0 then
+            UsedEnergy = 0
+            if Backpack == 0 then
                   if TimeOut == 0 then
                         if Transporter.UpdateEnergy(Variables.R) then
                               Event.emit{speed = 343, description = Events.RequestOrders, table = {target=Group_ID, transporterID = ID, energy=TotalEnergy, backPack=BackpackSize}}
-                              TimeOut = 10
+                              TimeOut = 500
                         end
                   end
                   TimeOut = TimeOut - 1
@@ -98,7 +102,6 @@ function TakeStep()
                   end
                   TimeOut = TimeOut - 1
             end
-            Transporter.UpdateEnergy(-Variables.Q) --Recharging
       end
 
       if not ((MyState == State.NotInit)
@@ -150,8 +153,18 @@ function TakeStep()
             end
       end
 
+      if MyState == Stat.WaitingToLand then
+            if TimeOut == 0 then
+                  if Transporter.UpdateEnergy(Variables.R) then
+                        Event.emit{speed = 0, description = Events.baseAccesRequest, table = {target=Group_ID}}
+                        TimeOut = 100
+                  end
+            end
+            TimeOut = TimeOut - 1
+      end
+
       if MyState == State.Returning then
-            if Utilities.distance(CurrentPosition, BaseEntrancePos) <= Variables.I then
+            if Utilities.distance(CurrentPosition, BaseEntrancePos) < Variables.I/(4/3) then
                   Event.emit{speed = 0, description = Events.baseAccesRequest, table = {target=Group_ID}}
                   MyState = State.WaitingToLand
             else
@@ -175,7 +188,7 @@ function TakeStep()
                   MyState = State.GatherMinerals
             else
                   if Transporter.UpdateEnergy(Variables.Q) then
-                        Utilities.moveTorus(BaseExitPos)
+                        Utilities.moveTorus(BaseExitPos, BasePosition)
                   end
             end
       end
@@ -183,6 +196,9 @@ function TakeStep()
       if MyState == State.GatherMinerals then
             if #TargetPosition == 0 then
                   TargetPosition = Transporter.GetTarget(CurrentPosition)
+                  if not Utilities.IsPoint(TargetPosition) then
+                        MyState = State.Returning
+                  end
             else
                   if Utilities.comparePoints(CurrentPosition, TargetPosition) then
                         Transporter.Mine(CurrentPosition)
@@ -198,6 +214,7 @@ function TakeStep()
                   end
             end
       end
+      Counter = Counter + 1
 end
 
 function CleanUp()

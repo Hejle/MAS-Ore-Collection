@@ -69,19 +69,20 @@ function HandleEvent(event)
     if eventDescription == Events.deployPositionRequested and ID == eventTable["target"] then
         --l_print("Base: " .. ID .. " , Explorer: " .. sourceID .. " has requested a deploy position.")
         ExplorerPose = table.remove(DeployPositionsList, 1)
-        if ExplorerPose ~= nil and (not(ExplorerPose[1] == nil or ExplorerPose[2] == nil)) then
+        if ExplorerPose ~= nil and ((Utilities.IsPoint({ExplorerPose[1], ExplorerPose[2]}))) then
             Event.emit{speed = 343, description = Events.servingDeployPosition, table = {target=sourceID, position = {ExplorerPose[1], ExplorerPose[2]}, orientation = ExplorerPose[3]}}
         else
-            Event.emit{speed = 343, description = Events.servingDeployPosition, table = {target=sourceID, position = BasePos, orientation = "nil"}}
+            ExplorerPose = GetNewDeploytPoint()
+            Event.emit{speed = 343, description = Events.servingDeployPosition, table = {target=sourceID, position = {ExplorerPose[1], ExplorerPose[2]}, orientation = ExplorerPose[3]}}
         end
     elseif eventDescription == Events.updateDeployPositionsList and ID == eventTable["target"] then
         newDeployPosition = {eventTable["data"][1],eventTable["data"][2]}
-        DistanceToDeploy = Utilities.distance(newDeployPosition,BasePos)
-
-        if eventTable[3] == "nil" then 
-        elseif DistanceToDeploy > Variables.G/2 then
-            Utilities.SampleNewDeployPosiiton(DeployPositionsList,Variables.W,SampleCounter)
-            SampleCounter = SampleCounter +1 
+        DistanceToDeploy = Utilities.distance(newDeployPosition, BasePos)
+        
+        if eventTable[3] == "nil" then
+            say("Explorer " .. sourceID .. " didn't find any ore.")
+        elseif DistanceToDeploy > 150 then -- Variables.G/2 then
+            say("Explorer " .. sourceID .. " reached max distance " .. DistanceToDeploy)
         else
             table.insert(DeployPositionsList, eventTable)
         end
@@ -98,6 +99,17 @@ function HandleEvent(event)
     elseif eventDescription == Events.baseAccesRequest and ID == eventTable["target"] then
         Event.emit{speed = 0, description = Events.baseAccesGranted, table = {target=sourceID}}
         --table.insert(LandingList, sourceID, sourceID)
+    end
+end
+
+function GetNewDeploytPoint()
+    DeployPositionsList = Utilities.SampleNewDeployPosiiton(DeployPositionsList, 10, SampleCounter)
+    SampleCounter = SampleCounter + 1
+    local Pose = table.remove(DeployPositionsList, 1)
+    if Utilities.IsPoint({Pose[1], Pose[2]}) then
+        return Pose
+    else
+        return GetNewDeploytPoint()
     end
 end
 

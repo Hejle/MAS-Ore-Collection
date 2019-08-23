@@ -180,7 +180,6 @@ function Utilities.moveTorus(targetPos, ignoreCollisionPos)
     if(targetPos[1] == nil or targetPos[2] == nil) then
         say("im dead: " .. Inspect.inspect(targetPos))
         say("im dead: " .. Inspect.inspect(ignoreCollisionPos))
-        --return
     end
     ignoreCollisionPos = ignoreCollisionPos or {Variables.G + 2, Variables.G + 2}
     local destX = targetPos[1]
@@ -313,7 +312,6 @@ function Utilities.moveTorus(targetPos, ignoreCollisionPos)
     
     DestinationX = destX
     DestinationY = destY
-
 end
 
 function Utilities.PaintBase()
@@ -374,13 +372,15 @@ function Utilities.SampleNewDeployPosiiton(PoseTable, Range, SampleCounter)
         PosY = PositionY - Range
     elseif CycleIt == 8 then
         PosX = PositionX + Range
-        PosY = PositionY - Range/2    
+        PosY = PositionY - Range/2
     end
     NewDeployPosition = {PosX, PosY, Constants.RandomDir}
     
 
     if (Utilities.GetEnergyNeeded(NewDeployPosition,{PositionX,PositionY})*2 < Variables.E) then
         PoseTable = addPose(PoseTable, NewDeployPosition)
+    else
+        return Utilities.SampleNewDeployPosiiton(PoseTable, Range, SampleCounter)
     end
 
     return PoseTable
@@ -430,7 +430,7 @@ function Utilities.GeneratePoints(PoseTable,NumPointsTops,NumPointsSides)
         PosY = refY + Variables.Z + offset
         ExplorerPose = {PosX, PosY, "North"}
         if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
-        PoseTable = addPose(PoseTable, ExplorerPose)
+            PoseTable = addPose(PoseTable, ExplorerPose)
         end
     end
     
@@ -440,7 +440,7 @@ function Utilities.GeneratePoints(PoseTable,NumPointsTops,NumPointsSides)
         PosY = refY + Variables.Z * 2 + offset
         ExplorerPose = {PosX, PosY, "North"}
         if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
-        PoseTable = addPose(PoseTable, ExplorerPose)
+            PoseTable = addPose(PoseTable, ExplorerPose)
         end
     end
     
@@ -451,7 +451,7 @@ function Utilities.GeneratePoints(PoseTable,NumPointsTops,NumPointsSides)
         PosY = refY + Variables.Z * 2 + offset
         ExplorerPose = {PosX, PosY, "North"}
         if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
-        PoseTable = addPose(PoseTable, ExplorerPose)
+            PoseTable = addPose(PoseTable, ExplorerPose)
         end
     end
     
@@ -462,7 +462,7 @@ function Utilities.GeneratePoints(PoseTable,NumPointsTops,NumPointsSides)
         PosY = refY + Variables.Z + offset
         ExplorerPose = {PosX, PosY, "North"}
         if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
-        PoseTable = addPose(PoseTable, ExplorerPose)
+            PoseTable = addPose(PoseTable, ExplorerPose)
         end
     end
     
@@ -474,7 +474,7 @@ function Utilities.GeneratePoints(PoseTable,NumPointsTops,NumPointsSides)
         PosY = refY - Variables.Z - offset
         ExplorerPose = {PosX, PosY, "South"}
         if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
-        PoseTable = addPose(PoseTable, ExplorerPose)
+            PoseTable = addPose(PoseTable, ExplorerPose)
         end
     end
     
@@ -484,7 +484,7 @@ function Utilities.GeneratePoints(PoseTable,NumPointsTops,NumPointsSides)
         PosY = refY - Variables.Z * 2 - offset
         ExplorerPose = {PosX, PosY, "South"}
         if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
-        PoseTable = addPose(PoseTable, ExplorerPose)
+            PoseTable = addPose(PoseTable, ExplorerPose)
         end
     end
     
@@ -495,7 +495,7 @@ function Utilities.GeneratePoints(PoseTable,NumPointsTops,NumPointsSides)
         PosY = refY - Variables.Z * 2 - offset
         ExplorerPose = {PosX, PosY, "South"}
         if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
-        PoseTable = addPose(PoseTable, ExplorerPose)
+            PoseTable = addPose(PoseTable, ExplorerPose)
         end
     end
     
@@ -506,7 +506,7 @@ function Utilities.GeneratePoints(PoseTable,NumPointsTops,NumPointsSides)
         PosY = refY - Variables.Z - offset
         ExplorerPose = {PosX, PosY, "South"}
         if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
-        PoseTable = addPose(PoseTable, ExplorerPose)
+            PoseTable = addPose(PoseTable, ExplorerPose)
         end
     end
     
@@ -518,7 +518,7 @@ function Utilities.GeneratePoints(PoseTable,NumPointsTops,NumPointsSides)
         PosX = refX + Variables.W
         ExplorerPose = {PosX, PosY, "East"}
         if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
-        PoseTable = addPose(PoseTable, ExplorerPose)
+            PoseTable = addPose(PoseTable, ExplorerPose)
         end
     end
     
@@ -529,7 +529,7 @@ function Utilities.GeneratePoints(PoseTable,NumPointsTops,NumPointsSides)
         PosX = refX + Variables.W * 2
         ExplorerPose = {PosX, PosY, "East"}
         if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
-        PoseTable = addPose(PoseTable, ExplorerPose)
+            PoseTable = addPose(PoseTable, ExplorerPose)
         end
     end
     
@@ -540,7 +540,7 @@ function Utilities.GeneratePoints(PoseTable,NumPointsTops,NumPointsSides)
         PosX = refX + Variables.W * 2
         ExplorerPose = {PosX, PosY, "East"}
         if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
-        PoseTable = addPose(PoseTable, ExplorerPose)
+            PoseTable = addPose(PoseTable, ExplorerPose)
         end
     end
     
@@ -551,7 +551,7 @@ function Utilities.GeneratePoints(PoseTable,NumPointsTops,NumPointsSides)
         PosX = refX + Variables.W
         ExplorerPose = {PosX, PosY, "East"}
         if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
-        PoseTable = addPose(PoseTable, ExplorerPose)
+            PoseTable = addPose(PoseTable, ExplorerPose)
         end
     end
     
@@ -563,7 +563,7 @@ function Utilities.GeneratePoints(PoseTable,NumPointsTops,NumPointsSides)
         PosX = refX - Variables.W
         ExplorerPose = {PosX, PosY, "West"}
         if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
-        PoseTable = addPose(PoseTable, ExplorerPose)
+            PoseTable = addPose(PoseTable, ExplorerPose)
         end
     end
     
@@ -574,7 +574,7 @@ function Utilities.GeneratePoints(PoseTable,NumPointsTops,NumPointsSides)
         PosX = refX - Variables.W * 2
         ExplorerPose = {PosX, PosY, "West"}
         if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
-        PoseTable = addPose(PoseTable, ExplorerPose)
+            PoseTable = addPose(PoseTable, ExplorerPose)
         end
     end
     
@@ -585,7 +585,7 @@ function Utilities.GeneratePoints(PoseTable,NumPointsTops,NumPointsSides)
         PosX = refX - Variables.W * 2
         ExplorerPose = {PosX, PosY, "West"}
         if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
-        PoseTable = addPose(PoseTable, ExplorerPose)
+            PoseTable = addPose(PoseTable, ExplorerPose)
         end
     end
     
@@ -596,7 +596,7 @@ function Utilities.GeneratePoints(PoseTable,NumPointsTops,NumPointsSides)
         PosX = refX - Variables.W
         ExplorerPose = {PosX, PosY, "West"}
         if (Utilities.GetEnergyNeeded({PosX,PosY},{PositionX,PositionY})*2 < Variables.E) then
-        PoseTable = addPose(PoseTable, ExplorerPose)
+            PoseTable = addPose(PoseTable, ExplorerPose)
         end
     end
     

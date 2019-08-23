@@ -69,6 +69,9 @@ function HandleEvent(event)
 end
 
 function TakeStep()
+    if Counter % 1000 then
+        --say(Inspect.inspect(MyState))
+    end
     if MyState == State.Deploying then
         if Utilities.comparePoints(CurrentPosition, DeployPosition) then
             MyState = State.Exploring
@@ -81,8 +84,8 @@ function TakeStep()
         -- Remeber to set the distance between steps properly, right now is only 1 pixel at a time
         NextPosition = GetNextStep(DeployOrientation, 1)
         Utilities.moveTorus(NextPosition)
-        
-            if DeployOrientation == Constants.R then
+
+            if DeployOrientation == Constants.RandomDir then
                 DeployOrientation = Search()
             else
                 Search()
@@ -96,7 +99,7 @@ function TakeStep()
         end
     
     elseif MyState == State.ReturningMemoryFull or MyState == State.ReturningBatteryLow or MyState == State.ReturningLoopComplete then
-        if Utilities.distance(CurrentPosition, BasePosition) <= Variables.I then
+        if Utilities.distance(CurrentPosition, BasePosition) <= Variables.I/(4/3) then
             Event.emit{speed = 0, description = Events.baseAccesRequest, table = {target=Group_ID}}
             MyState = State.WaitingToLand
         else
@@ -104,15 +107,9 @@ function TakeStep()
         end
     elseif MyState == State.PermissionToLand then
         if Utilities.comparePoints(CurrentPosition, BaseEntrancePosition) then
-            if Utilities.IsNotEmpty(Memory) then
-                MyState = State.EnterBase
-                SendMemoryToBase()
-                Event.emit{speed = 343, description = Events.updateOreList, table = {target = Group_ID, data=LastPosition}}
-            else
-                MyState = State.EnterBase
-                LastPosition[3] = "nil"
-                Event.emit{speed = 343, description = Events.updateDeployPositionsList, table = {target = Group_ID, data=LastPosition}}
-            end
+            MyState = State.EnterBase
+            LastPosition[3] = "nil"
+            Event.emit{speed = 343, description = Events.updateDeployPositionsList, table = {target = Group_ID, data=LastPosition}}
         else
             Utilities.moveTorus(BaseEntrancePosition, BasePosition)
         end
@@ -123,7 +120,7 @@ function TakeStep()
             Utilities.moveTorus(BasePosition, BasePosition)
         end
     elseif MyState == State.Base then
-        if #Memory > 0 then
+        if Utilities.IsNotEmpty(Memory) then
             SendMemoryToBase()
         elseif UsedEnergy == 0 then
             Event.emit{speed = 343, description = Events.deployPositionRequested, table = {target = Group_ID}}
@@ -139,21 +136,21 @@ function TakeStep()
         end
     elseif MyState == State.WaitForOrders then
         -- Do nothing
-        elseif MyState == State.WaitingToLand then
+    elseif MyState == State.WaitingToLand then
         -- Do nothing
-        end
+    end
 
-        if not (MyState == State.NotInit) then
-            UpdateEnergy()
-            CurrentPosition = {PositionX, PositionY}
-        end
-        
+    if not (MyState == State.NotInit) then
+        UpdateEnergy()
+        CurrentPosition = {PositionX, PositionY}
+    end
+    Counter = Counter + 1
 
 end
 
 function SendMemoryToBase()
     if ExTimeOut == 0 then
-        Event.emit{speed = 343, description = "updateOreList", table = {target = Group_ID, data=Memory}}
+        Event.emit{speed = 343, description = Events.updateOreList, table = {target = Group_ID, data=Memory}}
         ExTimeOut = 200
     end
     ExTimeOut = ExTimeOut - 1
@@ -256,7 +253,6 @@ function CleanUp()
 end
 
 function GetNextStep(orientation, stepsize)
-    
     position = {0, 0}
     if orientation == Constants.North then
         position = {PositionX, PositionY + stepsize}
