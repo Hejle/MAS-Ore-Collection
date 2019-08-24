@@ -7,6 +7,7 @@ Collision = require "ranalib_collision"
 SharedPosition = require "Libs.SharedPosition"
 Inspect = require "Libs.inspect"
 Utilities = require "Libs.Utilities"
+Enviroment = require "ranalib_environment"
 
 --parameters
 Counter = 0
@@ -41,6 +42,10 @@ end
 function TakeStep()
     if Counter == 0 then
         InitRobots()
+    end
+    if Counter == Variables.T then
+        say(Minerals)
+        Enviroment.stop()
     end
     if Utilities.IsNotEmpty(LandingList) then
         local k, v = next(LandingList)
