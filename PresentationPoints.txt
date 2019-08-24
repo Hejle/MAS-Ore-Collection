@@ -1,0 +1,15 @@
+1. Changes to the kode after turning in
+2. Show working example with n=1, n=2, and n=3
+3. Show/Reflect on results with Yves Variables
+4. Reflect on results
+5. Shortcommings
+    5.1: Protocol
+    5.2: Coop/Competive
+    5.3: (Return to base)
+6. Good Decisions
+    6.1 Only giving possible orders
+    6.2 Choosing Neartest Objective
+    6.3 Deploying before scanning
+7. Not Optimal Decisions
+    7.1 Flow Information
+    7.2 Bottleneck

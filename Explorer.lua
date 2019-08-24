@@ -145,8 +145,10 @@ function TakeStep()
     end
 
     if not (MyState == State.NotInit) then
-        UpdateEnergy()
-        CurrentPosition = {PositionX, PositionY}
+        if not (MyState == State.Dead) then
+            UpdateEnergy()
+            CurrentPosition = {PositionX, PositionY}
+        end
     end
     Counter = Counter + 1
 
@@ -187,9 +189,12 @@ function UpdateEnergy()
         end
     end
     UsedEnergy = UsedEnergy + StateEnergyCost
+    if UsedEnergy < 0 then
+        UsedEnergy = 0
+    end
     if UsedEnergy >= TotalEnergy then
         MyState = State.Dead
-        --say("I died: " .. ID)
+        say("I died: " .. ID)
     end
 end
 

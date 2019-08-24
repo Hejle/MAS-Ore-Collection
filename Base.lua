@@ -141,6 +141,7 @@ function InitRobots()
 end
 
 function CleanUp()
+    say(Minerals)
   SaveDatatoFile(EvaluationData,Filename)
 end
 

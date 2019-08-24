@@ -42,16 +42,15 @@ function CleanUp()
 end
 
 function MapInitialization()
-
+	
 	MapCleanUp()
 
-	Ore_total = ENV_WIDTH * ENV_HEIGHT * Variables.D
-
+	Ore_total = Variables.G * Variables.G * Variables.D
 	g = 0
 
 	for j = 1, Ore_total do
-		local x = Stat.randomInteger(0, ENV_WIDTH)
-		local y = Stat.randomInteger(0, ENV_HEIGHT)
+		local x = Stat.randomInteger(0, Variables.G)
+		local y = Stat.randomInteger(0, Variables.G)
 
 		if Draw.compareColor(Map.checkColor(x, y), Constants.background_color) then
 
@@ -61,7 +60,7 @@ function MapInitialization()
 		end
 		g = g + 1
 
-		if g >= ENV_WIDTH * ENV_HEIGHT * 3 then
+		if g >= Variables.G * Variables.G * 3 then
 		--break
 		end
 	end
